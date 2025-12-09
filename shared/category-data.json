@@ -1,0 +1,424 @@
+{
+  "categories": [
+    {
+      "PRIMARY": "INCOME",
+      "DETAILED": "INCOME_SALARY",
+      "DESCRIPTION": "Regular salary or wages from employment"
+    },
+    {
+      "PRIMARY": "INCOME",
+      "DETAILED": "INCOME_FREELANCE",
+      "DESCRIPTION": "Income from freelance work or consulting"
+    },
+    {
+      "PRIMARY": "INCOME",
+      "DETAILED": "INCOME_INVESTMENT",
+      "DESCRIPTION": "Investment returns, dividends, or interest income"
+    },
+    {
+      "PRIMARY": "INCOME",
+      "DETAILED": "INCOME_RENTAL",
+      "DESCRIPTION": "Income from rental properties"
+    },
+    {
+      "PRIMARY": "INCOME",
+      "DETAILED": "INCOME_GOVERNMENT",
+      "DESCRIPTION": "Government benefits, tax refunds, or social assistance"
+    },
+    {
+      "PRIMARY": "INCOME",
+      "DETAILED": "INCOME_OTHER",
+      "DESCRIPTION": "Other sources of income not categorized above"
+    },
+    {
+      "PRIMARY": "RENT_AND_UTILITIES",
+      "DETAILED": "RENT_AND_UTILITIES_RENT",
+      "DESCRIPTION": "Monthly rent or lease payments for housing"
+    },
+    {
+      "PRIMARY": "RENT_AND_UTILITIES",
+      "DETAILED": "RENT_AND_UTILITIES_MORTGAGE",
+      "DESCRIPTION": "Mortgage payments for owned property"
+    },
+    {
+      "PRIMARY": "RENT_AND_UTILITIES",
+      "DETAILED": "RENT_AND_UTILITIES_ELECTRICITY",
+      "DESCRIPTION": "Electricity bills and charges"
+    },
+    {
+      "PRIMARY": "RENT_AND_UTILITIES",
+      "DETAILED": "RENT_AND_UTILITIES_GAS",
+      "DESCRIPTION": "Natural gas or heating fuel bills"
+    },
+    {
+      "PRIMARY": "RENT_AND_UTILITIES",
+      "DETAILED": "RENT_AND_UTILITIES_WATER",
+      "DESCRIPTION": "Water and sewage bills"
+    },
+    {
+      "PRIMARY": "RENT_AND_UTILITIES",
+      "DETAILED": "RENT_AND_UTILITIES_INTERNET",
+      "DESCRIPTION": "Internet service provider charges"
+    },
+    {
+      "PRIMARY": "RENT_AND_UTILITIES",
+      "DETAILED": "RENT_AND_UTILITIES_PHONE",
+      "DESCRIPTION": "Mobile and landline phone bills"
+    },
+    {
+      "PRIMARY": "RENT_AND_UTILITIES",
+      "DETAILED": "RENT_AND_UTILITIES_PROPERTY_TAX",
+      "DESCRIPTION": "Property taxes and related charges"
+    },
+    {
+      "PRIMARY": "FOOD_AND_DRINK",
+      "DETAILED": "FOOD_AND_DRINK_GROCERIES",
+      "DESCRIPTION": "Purchases for fresh produce and groceries from supermarkets"
+    },
+    {
+      "PRIMARY": "FOOD_AND_DRINK",
+      "DETAILED": "FOOD_AND_DRINK_RESTAURANTS",
+      "DESCRIPTION": "Dining at restaurants, cafes, and eateries"
+    },
+    {
+      "PRIMARY": "FOOD_AND_DRINK",
+      "DETAILED": "FOOD_AND_DRINK_FAST_FOOD",
+      "DESCRIPTION": "Fast food and quick service restaurants"
+    },
+    {
+      "PRIMARY": "FOOD_AND_DRINK",
+      "DETAILED": "FOOD_AND_DRINK_COFFEE_SHOPS",
+      "DESCRIPTION": "Coffee shops and beverage purchases"
+    },
+    {
+      "PRIMARY": "FOOD_AND_DRINK",
+      "DETAILED": "FOOD_AND_DRINK_ALCOHOL",
+      "DESCRIPTION": "Alcoholic beverages from stores or bars"
+    },
+    {
+      "PRIMARY": "FOOD_AND_DRINK",
+      "DETAILED": "FOOD_AND_DRINK_DELIVERY",
+      "DESCRIPTION": "Food delivery services and takeout orders"
+    },
+    {
+      "PRIMARY": "TRANSPORTATION",
+      "DETAILED": "TRANSPORTATION_GAS",
+      "DESCRIPTION": "Gasoline and fuel for vehicles"
+    },
+    {
+      "PRIMARY": "TRANSPORTATION",
+      "DETAILED": "TRANSPORTATION_PUBLIC_TRANSIT",
+      "DESCRIPTION": "Bus, train, subway, and other public transportation"
+    },
+    {
+      "PRIMARY": "TRANSPORTATION",
+      "DETAILED": "TRANSPORTATION_RIDESHARE",
+      "DESCRIPTION": "Uber, Lyft, and similar rideshare services"
+    },
+    {
+      "PRIMARY": "TRANSPORTATION",
+      "DETAILED": "TRANSPORTATION_TAXI",
+      "DESCRIPTION": "Traditional taxi services"
+    },
+    {
+      "PRIMARY": "TRANSPORTATION",
+      "DETAILED": "TRANSPORTATION_PARKING",
+      "DESCRIPTION": "Parking fees and charges"
+    },
+    {
+      "PRIMARY": "TRANSPORTATION",
+      "DETAILED": "TRANSPORTATION_VEHICLE_MAINTENANCE",
+      "DESCRIPTION": "Car repairs, oil changes, and vehicle maintenance"
+    },
+    {
+      "PRIMARY": "TRANSPORTATION",
+      "DETAILED": "TRANSPORTATION_CAR_INSURANCE",
+      "DESCRIPTION": "Auto insurance premiums"
+    },
+    {
+      "PRIMARY": "TRANSPORTATION",
+      "DETAILED": "TRANSPORTATION_CAR_PAYMENT",
+      "DESCRIPTION": "Auto loan or lease payments"
+    },
+    {
+      "PRIMARY": "ENTERTAINMENT",
+      "DETAILED": "ENTERTAINMENT_TV_AND_MOVIES",
+      "DESCRIPTION": "Streaming services like Netflix, Disney+, HBO, cinema tickets"
+    },
+    {
+      "PRIMARY": "ENTERTAINMENT",
+      "DETAILED": "ENTERTAINMENT_MUSIC_AND_AUDIO",
+      "DESCRIPTION": "Spotify, Apple Music, audiobooks, podcasts subscriptions"
+    },
+    {
+      "PRIMARY": "ENTERTAINMENT",
+      "DETAILED": "ENTERTAINMENT_GAMING",
+      "DESCRIPTION": "Video games, gaming subscriptions, in-game purchases"
+    },
+    {
+      "PRIMARY": "ENTERTAINMENT",
+      "DETAILED": "ENTERTAINMENT_EVENTS",
+      "DESCRIPTION": "Concerts, sports events, theatre, shows, and live entertainment"
+    },
+    {
+      "PRIMARY": "ENTERTAINMENT",
+      "DETAILED": "ENTERTAINMENT_HOBBIES",
+      "DESCRIPTION": "Hobby-related purchases and activities"
+    },
+    {
+      "PRIMARY": "ENTERTAINMENT",
+      "DETAILED": "ENTERTAINMENT_BOOKS",
+      "DESCRIPTION": "Books, magazines, and reading materials"
+    },
+    {
+      "PRIMARY": "ENTERTAINMENT",
+      "DETAILED": "ENTERTAINMENT_CASINOS_AND_GAMBLING",
+      "DESCRIPTION": "Casino visits, lottery, sports betting, and gambling activities"
+    },
+    {
+      "PRIMARY": "PERSONAL_CARE",
+      "DETAILED": "PERSONAL_CARE_GYMS_AND_FITNESS_CENTERS",
+      "DESCRIPTION": "Gym memberships, fitness classes, personal training"
+    },
+    {
+      "PRIMARY": "PERSONAL_CARE",
+      "DETAILED": "PERSONAL_CARE_HAIR_SALON",
+      "DESCRIPTION": "Hair cuts, styling, coloring services"
+    },
+    {
+      "PRIMARY": "PERSONAL_CARE",
+      "DETAILED": "PERSONAL_CARE_SPA_AND_MASSAGE",
+      "DESCRIPTION": "Spa treatments, massages, wellness services"
+    },
+    {
+      "PRIMARY": "PERSONAL_CARE",
+      "DETAILED": "PERSONAL_CARE_BEAUTY_PRODUCTS",
+      "DESCRIPTION": "Cosmetics, skincare, and beauty product purchases"
+    },
+    {
+      "PRIMARY": "PERSONAL_CARE",
+      "DETAILED": "PERSONAL_CARE_HYGIENE",
+      "DESCRIPTION": "Personal hygiene products and toiletries"
+    },
+    {
+      "PRIMARY": "SHOPPING",
+      "DETAILED": "SHOPPING_CLOTHING",
+      "DESCRIPTION": "Clothing, shoes, and fashion accessories"
+    },
+    {
+      "PRIMARY": "SHOPPING",
+      "DETAILED": "SHOPPING_ELECTRONICS",
+      "DESCRIPTION": "Electronics, computers, phones, and tech gadgets"
+    },
+    {
+      "PRIMARY": "SHOPPING",
+      "DETAILED": "SHOPPING_HOME_AND_GARDEN",
+      "DESCRIPTION": "Furniture, home decor, garden supplies, and household items"
+    },
+    {
+      "PRIMARY": "SHOPPING",
+      "DETAILED": "SHOPPING_ONLINE_RETAIL",
+      "DESCRIPTION": "General online shopping from Amazon, eBay, etc."
+    },
+    {
+      "PRIMARY": "SHOPPING",
+      "DETAILED": "SHOPPING_DEPARTMENT_STORES",
+      "DESCRIPTION": "Department store purchases (Target, Walmart, etc.)"
+    },
+    {
+      "PRIMARY": "SHOPPING",
+      "DETAILED": "SHOPPING_GIFTS",
+      "DESCRIPTION": "Gifts for others, charitable donations"
+    },
+    {
+      "PRIMARY": "MEDICAL",
+      "DETAILED": "MEDICAL_DOCTOR",
+      "DESCRIPTION": "Doctor visits, consultations, and medical appointments"
+    },
+    {
+      "PRIMARY": "MEDICAL",
+      "DETAILED": "MEDICAL_PHARMACY",
+      "DESCRIPTION": "Prescription medications and pharmacy purchases"
+    },
+    {
+      "PRIMARY": "MEDICAL",
+      "DETAILED": "MEDICAL_DENTAL",
+      "DESCRIPTION": "Dental care and treatments"
+    },
+    {
+      "PRIMARY": "MEDICAL",
+      "DETAILED": "MEDICAL_VISION",
+      "DESCRIPTION": "Eye exams, glasses, contact lenses"
+    },
+    {
+      "PRIMARY": "MEDICAL",
+      "DETAILED": "MEDICAL_INSURANCE",
+      "DESCRIPTION": "Health insurance premiums"
+    },
+    {
+      "PRIMARY": "MEDICAL",
+      "DETAILED": "MEDICAL_EMERGENCY",
+      "DESCRIPTION": "Emergency room visits and urgent care"
+    },
+    {
+      "PRIMARY": "TRAVEL",
+      "DETAILED": "TRAVEL_FLIGHTS",
+      "DESCRIPTION": "Airline tickets and flight bookings"
+    },
+    {
+      "PRIMARY": "TRAVEL",
+      "DETAILED": "TRAVEL_HOTELS",
+      "DESCRIPTION": "Hotel stays and accommodations"
+    },
+    {
+      "PRIMARY": "TRAVEL",
+      "DETAILED": "TRAVEL_RENTAL_CARS",
+      "DESCRIPTION": "Car rental services"
+    },
+    {
+      "PRIMARY": "TRAVEL",
+      "DETAILED": "TRAVEL_VACATION_PACKAGES",
+      "DESCRIPTION": "Vacation packages and tour bookings"
+    },
+    {
+      "PRIMARY": "TRAVEL",
+      "DETAILED": "TRAVEL_ACTIVITIES",
+      "DESCRIPTION": "Tourist activities, excursions, and experiences"
+    },
+    {
+      "PRIMARY": "EDUCATION",
+      "DETAILED": "EDUCATION_TUITION",
+      "DESCRIPTION": "School or university tuition fees"
+    },
+    {
+      "PRIMARY": "EDUCATION",
+      "DETAILED": "EDUCATION_BOOKS_AND_SUPPLIES",
+      "DESCRIPTION": "Textbooks, school supplies, and educational materials"
+    },
+    {
+      "PRIMARY": "EDUCATION",
+      "DETAILED": "EDUCATION_COURSES",
+      "DESCRIPTION": "Online courses, certifications, and training programs"
+    },
+    {
+      "PRIMARY": "EDUCATION",
+      "DETAILED": "EDUCATION_STUDENT_LOAN",
+      "DESCRIPTION": "Student loan payments"
+    },
+    {
+      "PRIMARY": "LOAN_PAYMENTS",
+      "DETAILED": "LOAN_PAYMENTS_PERSONAL_LOAN",
+      "DESCRIPTION": "Personal loan repayments"
+    },
+    {
+      "PRIMARY": "LOAN_PAYMENTS",
+      "DETAILED": "LOAN_PAYMENTS_CREDIT_CARD",
+      "DESCRIPTION": "Credit card payments and balances"
+    },
+    {
+      "PRIMARY": "LOAN_PAYMENTS",
+      "DETAILED": "LOAN_PAYMENTS_BUSINESS_LOAN",
+      "DESCRIPTION": "Business loan repayments"
+    },
+    {
+      "PRIMARY": "INSURANCE",
+      "DETAILED": "INSURANCE_LIFE",
+      "DESCRIPTION": "Life insurance premiums"
+    },
+    {
+      "PRIMARY": "INSURANCE",
+      "DETAILED": "INSURANCE_HOME",
+      "DESCRIPTION": "Home or renters insurance"
+    },
+    {
+      "PRIMARY": "INSURANCE",
+      "DETAILED": "INSURANCE_OTHER",
+      "DESCRIPTION": "Other insurance products"
+    },
+    {
+      "PRIMARY": "CHILDCARE",
+      "DETAILED": "CHILDCARE_DAYCARE",
+      "DESCRIPTION": "Daycare and nursery services"
+    },
+    {
+      "PRIMARY": "CHILDCARE",
+      "DETAILED": "CHILDCARE_BABYSITTER",
+      "DESCRIPTION": "Babysitting and childcare services"
+    },
+    {
+      "PRIMARY": "CHILDCARE",
+      "DETAILED": "CHILDCARE_CHILD_SUPPORT",
+      "DESCRIPTION": "Child support payments"
+    },
+    {
+      "PRIMARY": "PETS",
+      "DETAILED": "PETS_VETERINARY",
+      "DESCRIPTION": "Veterinary care and pet medical services"
+    },
+    {
+      "PRIMARY": "PETS",
+      "DETAILED": "PETS_FOOD_AND_SUPPLIES",
+      "DESCRIPTION": "Pet food, toys, and supplies"
+    },
+    {
+      "PRIMARY": "PETS",
+      "DETAILED": "PETS_GROOMING",
+      "DESCRIPTION": "Pet grooming and care services"
+    },
+    {
+      "PRIMARY": "SAVINGS_AND_INVESTMENTS",
+      "DETAILED": "SAVINGS_AND_INVESTMENTS_SAVINGS_ACCOUNT",
+      "DESCRIPTION": "Transfers to savings accounts"
+    },
+    {
+      "PRIMARY": "SAVINGS_AND_INVESTMENTS",
+      "DETAILED": "SAVINGS_AND_INVESTMENTS_INVESTMENT_ACCOUNT",
+      "DESCRIPTION": "Investment account contributions"
+    },
+    {
+      "PRIMARY": "SAVINGS_AND_INVESTMENTS",
+      "DETAILED": "SAVINGS_AND_INVESTMENTS_RETIREMENT",
+      "DESCRIPTION": "Retirement account contributions (401k, IRA, pension)"
+    },
+    {
+      "PRIMARY": "FEES_AND_CHARGES",
+      "DETAILED": "FEES_AND_CHARGES_BANK_FEES",
+      "DESCRIPTION": "Bank account fees and charges"
+    },
+    {
+      "PRIMARY": "FEES_AND_CHARGES",
+      "DETAILED": "FEES_AND_CHARGES_ATM_FEES",
+      "DESCRIPTION": "ATM withdrawal fees"
+    },
+    {
+      "PRIMARY": "FEES_AND_CHARGES",
+      "DETAILED": "FEES_AND_CHARGES_LATE_FEES",
+      "DESCRIPTION": "Late payment fees and penalties"
+    },
+    {
+      "PRIMARY": "FEES_AND_CHARGES",
+      "DETAILED": "FEES_AND_CHARGES_SERVICE_FEES",
+      "DESCRIPTION": "Various service fees and charges"
+    },
+    {
+      "PRIMARY": "TRANSFERS",
+      "DETAILED": "TRANSFERS_INTERNAL",
+      "DESCRIPTION": "Transfers between own accounts"
+    },
+    {
+      "PRIMARY": "TRANSFERS",
+      "DETAILED": "TRANSFERS_EXTERNAL",
+      "DESCRIPTION": "Transfers to external accounts or people"
+    },
+    {
+      "PRIMARY": "UNCATEGORIZED",
+      "DETAILED": "UNCATEGORIZED_UNKNOWN",
+      "DESCRIPTION": "Transactions that could not be categorized"
+    },
+    {
+      "PRIMARY": "UNCATEGORIZED",
+      "DETAILED": "UNCATEGORIZED_PENDING_REVIEW",
+      "DESCRIPTION": "Transactions pending manual review"
+    }
+  ]
+}
