@@ -96,11 +96,51 @@ spendlens/
 
 ## Getting Started
 
-### Prerequisites
+### Quick Start with Antigravity (Recommended)
+
+The fastest way to run SpendLens locally is using Antigravity, which automatically handles environment setup:
+
+1. **Install Antigravity** (if you haven't already)
+   ```bash
+   npm install -g @antigravity/cli
+   ```
+
+2. **Clone and launch**
+   ```bash
+   git clone https://github.com/akhanna222/personal-spending-model.git
+   cd personal-spending-model
+   antigravity dev
+   ```
+
+3. **Set your Anthropic API key**
+
+   When prompted, enter your Anthropic API key (get one at https://console.anthropic.com/)
+
+   Or set it manually:
+   ```bash
+   export ANTHROPIC_API_KEY=your_api_key_here
+   antigravity dev
+   ```
+
+4. **Access the application**
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:3001
+
+Antigravity will automatically:
+- Install all dependencies (backend + frontend)
+- Set up the development environment
+- Start both servers concurrently
+- Watch for file changes and hot-reload
+
+### Manual Installation
+
+If you prefer to set up manually without Antigravity:
+
+#### Prerequisites
 - Node.js 18+ and npm
 - Anthropic API key (get one at https://console.anthropic.com/)
 
-### Installation
+#### Installation
 
 1. **Clone the repository**
    ```bash
