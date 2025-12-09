@@ -140,7 +140,21 @@ If you prefer to set up manually without Antigravity:
 - Node.js 18+ and npm
 - Anthropic API key (get one at https://console.anthropic.com/)
 
-#### Installation
+#### Quick Setup with Scripts
+
+**On macOS/Linux:**
+```bash
+./setup.sh
+```
+
+**On Windows (PowerShell):**
+```powershell
+.\setup.ps1
+```
+
+These scripts will automatically install all dependencies and guide you through creating the `.env` file.
+
+#### Step-by-Step Installation
 
 1. **Clone the repository**
    ```bash
@@ -148,6 +162,8 @@ If you prefer to set up manually without Antigravity:
    ```
 
 2. **Install dependencies**
+
+   **On macOS/Linux (bash/zsh):**
    ```bash
    npm install
    cd backend && npm install
@@ -155,10 +171,41 @@ If you prefer to set up manually without Antigravity:
    cd ..
    ```
 
+   **On Windows (PowerShell):**
+   ```powershell
+   npm install
+   cd backend
+   npm install
+   cd ..
+   cd frontend
+   npm install
+   cd ..
+   ```
+
 3. **Set up environment variables**
 
-   Create `backend/.env`:
+   **On macOS/Linux:**
    ```bash
+   # Create backend/.env
+   cat > backend/.env << EOF
+   ANTHROPIC_API_KEY=your_api_key_here
+   PORT=3001
+   NODE_ENV=development
+   EOF
+   ```
+
+   **On Windows (PowerShell):**
+   ```powershell
+   # Create backend\.env
+   @"
+   ANTHROPIC_API_KEY=your_api_key_here
+   PORT=3001
+   NODE_ENV=development
+   "@ | Out-File -FilePath backend\.env -Encoding utf8
+   ```
+
+   Or manually create `backend/.env` with:
+   ```
    ANTHROPIC_API_KEY=your_api_key_here
    PORT=3001
    NODE_ENV=development
