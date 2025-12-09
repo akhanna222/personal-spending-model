@@ -6,8 +6,6 @@ build/
 *.log
 .DS_Store
 uploads/
-*.pdf
-*.csv
 coverage/
 .vscode/
 .idea/
