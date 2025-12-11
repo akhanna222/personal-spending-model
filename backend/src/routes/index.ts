@@ -4,6 +4,10 @@ import { parseCSV, parsePDF } from '../utils/parser';
 import {
   enhanceTransaction,
   enhanceTransactionsBatch,
+  getLLMConfig,
+  validateLLMConfig,
+} from '../services/llmService';
+import {
   getCategories,
   getPrimaryCategories,
   getDetailedCategories,
@@ -308,6 +312,26 @@ router.get('/export/csv', (req, res) => {
     res.send(csv);
   } catch (error: any) {
     console.error('Export CSV error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /api/llm-config
+ * Get LLM provider configuration
+ */
+router.get('/llm-config', (req, res) => {
+  try {
+    const config = getLLMConfig();
+    const validation = validateLLMConfig();
+
+    res.json({
+      ...config,
+      configured: validation.valid,
+      error: validation.error,
+    });
+  } catch (error: any) {
+    console.error('LLM config error:', error);
     res.status(500).json({ error: error.message });
   }
 });

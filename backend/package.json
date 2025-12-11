@@ -13,6 +13,7 @@
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "express-fileupload": "^1.5.0",
+    "openai": "^4.67.3",
     "papaparse": "^5.4.1",
     "pdf-parse": "^1.1.1",
     "uuid": "^9.0.1"

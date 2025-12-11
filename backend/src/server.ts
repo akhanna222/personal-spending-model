@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import fileUpload from 'express-fileupload';
 import routes from './routes';
+import { validateLLMConfig, getLLMConfig } from './services/llmService';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -36,10 +37,37 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`SpendLens API server running on http://localhost:${PORT}`);
-  console.log(`Health check: http://localhost:${PORT}/health`);
+  console.log(`\n🚀 SpendLens API server running on http://localhost:${PORT}`);
+  console.log(`📊 Health check: http://localhost:${PORT}/health\n`);
 
-  if (!process.env.ANTHROPIC_API_KEY) {
-    console.warn('WARNING: ANTHROPIC_API_KEY not set. LLM features will not work.');
+  // Check LLM configuration
+  const llmConfig = getLLMConfig();
+  const validation = validateLLMConfig();
+
+  console.log(`🤖 LLM Provider: ${llmConfig.provider.toUpperCase()}`);
+
+  if (llmConfig.multiAgent) {
+    console.log(`⚡ Multi-Agent Mode: ENABLED`);
   }
+
+  if (!validation.valid) {
+    console.warn(`\n⚠️  WARNING: ${validation.error}`);
+    console.warn(`   Transaction enhancement features will not work.\n`);
+  } else {
+    console.log(`✅ LLM configuration valid\n`);
+  }
+
+  // Show available providers
+  const available = [];
+  if (llmConfig.claudeAvailable) available.push('Claude');
+  if (llmConfig.openaiAvailable) available.push('OpenAI');
+
+  if (available.length > 0) {
+    console.log(`📦 Available providers: ${available.join(', ')}`);
+  } else {
+    console.log(`📦 No LLM providers configured`);
+  }
+
+  console.log(`\n💡 To change provider, set LLM_PROVIDER in backend/.env`);
+  console.log(`   Options: "claude" or "openai"\n`);
 });
