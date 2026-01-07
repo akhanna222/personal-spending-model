@@ -1,14 +1,23 @@
 export interface Transaction {
   id: string;
   date: string; // YYYY-MM-DD
-  amount: number;
-  currency: string;
-  rawDescription: string;
+  transaction_text: string; // Raw transaction text from bank statement
+  payment_in: number; // Amount received (0 if not applicable)
+  payment_out: number; // Amount paid (0 if not applicable)
+  balance?: number; // Account balance after transaction
+  transaction_description?: string; // AI-generated description
+  transaction_primary?: string; // Plaid primary category
+  transaction_detailed?: string; // Plaid detailed category
+
+  // Legacy fields for backward compatibility
+  amount?: number;
+  currency?: string;
+  rawDescription?: string;
   enhancedDescription?: string;
   primaryCategory?: string;
   detailedCategory?: string;
   categoryConfidence?: number;
-  isIncome: boolean;
+  isIncome?: boolean;
   isRecurring?: boolean;
   merchant?: string;
   channel?: 'online' | 'in-store' | 'subscription' | 'unknown';

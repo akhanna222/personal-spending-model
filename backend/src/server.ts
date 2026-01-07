@@ -39,7 +39,7 @@ app.listen(PORT, () => {
   console.log(`SpendLens API server running on http://localhost:${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/health`);
 
-  if (!process.env.ANTHROPIC_API_KEY) {
-    console.warn('WARNING: ANTHROPIC_API_KEY not set. LLM features will not work.');
+  if (!process.env.OPENAI_API_KEY) {
+    console.warn('WARNING: OPENAI_API_KEY not set. AI enhancement features will not work.');
   }
 });
