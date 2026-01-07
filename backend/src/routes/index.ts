@@ -1,14 +1,14 @@
 import express from 'express';
 import fileUpload from 'express-fileupload';
-import { parseCSV, parsePDF } from '../utils/parser';
+import { parseCSV, parsePDF, parseImage } from '../utils/parser';
 import {
-  enhanceTransaction,
+  enhanceTransactionWithOpenAI,
   enhanceTransactionsBatch,
-  getCategories,
+  getPlaidCategories,
   getPrimaryCategories,
   getDetailedCategories,
-  isValidCategory,
-} from '../services/claudeService';
+  isValidPlaidCategory,
+} from '../services/openaiService';
 import { generateInsights } from '../services/behavioralModel';
 import { Transaction } from '../types';
 
@@ -37,15 +37,34 @@ router.post('/upload', async (req, res) => {
     for (const file of files) {
       const fileBuffer = file.data;
       const fileName = file.name;
-      const fileType = fileName.toLowerCase().endsWith('.pdf') ? 'pdf' : 'csv';
+      const lowerFileName = fileName.toLowerCase();
+
+      // Determine file type
+      let fileType: 'pdf' | 'csv' | 'image' = 'csv';
+      if (lowerFileName.endsWith('.pdf')) {
+        fileType = 'pdf';
+      } else if (lowerFileName.match(/\.(png|jpg|jpeg|gif|bmp|tiff)$/)) {
+        fileType = 'image';
+      } else if (!lowerFileName.endsWith('.csv')) {
+        results.push({ fileName, error: 'Unsupported file type. Supported: PDF, CSV, PNG, JPG, JPEG' });
+        continue;
+      }
 
       let parsed;
-      if (fileType === 'pdf') {
-        parsed = await parsePDF(fileBuffer, fileName);
-      } else if (fileType === 'csv') {
-        parsed = await parseCSV(fileBuffer, fileName);
-      } else {
-        results.push({ fileName, error: 'Unsupported file type' });
+      try {
+        if (fileType === 'pdf') {
+          parsed = await parsePDF(fileBuffer, fileName);
+        } else if (fileType === 'csv') {
+          parsed = await parseCSV(fileBuffer, fileName);
+        } else if (fileType === 'image') {
+          parsed = await parseImage(fileBuffer, fileName);
+        } else {
+          results.push({ fileName, error: 'Unsupported file type' });
+          continue;
+        }
+      } catch (parseError: any) {
+        console.error(`Error parsing ${fileName}:`, parseError);
+        results.push({ fileName, error: `Parsing failed: ${parseError.message}` });
         continue;
       }
 
@@ -140,7 +159,7 @@ router.get('/transactions', (req, res) => {
 
 /**
  * POST /api/transactions/enhance
- * Enhance transactions with LLM
+ * Enhance transactions with OpenAI (generate descriptions and match Plaid categories)
  */
 router.post('/transactions/enhance', async (req, res) => {
   try {
@@ -156,27 +175,23 @@ router.post('/transactions/enhance', async (req, res) => {
     }
 
     // Enhance in batch
-    const enhancements = await enhanceTransactionsBatch(toEnhance, (current, total) => {
+    const enhanced = await enhanceTransactionsBatch(toEnhance, (current, total) => {
       // Could emit progress via WebSocket in production
       console.log(`Enhanced ${current}/${total} transactions`);
     });
 
-    // Apply enhancements to transactions
-    toEnhance.forEach(t => {
-      const enhancement = enhancements.get(t.id);
-      if (enhancement) {
-        t.enhancedDescription = enhancement.enhancedDescription;
-        t.merchant = enhancement.merchant || undefined;
-        t.channel = enhancement.channel;
-        t.primaryCategory = enhancement.primaryCategory;
-        t.detailedCategory = enhancement.detailedCategory;
-        t.categoryConfidence = enhancement.confidence;
+    // Update transactions in the store
+    enhanced.forEach(enhancedTx => {
+      const index = transactions.findIndex(t => t.id === enhancedTx.id);
+      if (index !== -1) {
+        transactions[index] = enhancedTx;
       }
     });
 
     res.json({
       success: true,
-      enhanced: toEnhance.length,
+      enhanced: enhanced.length,
+      transactions: enhanced,
     });
   } catch (error: any) {
     console.error('Enhancement error:', error);
@@ -199,8 +214,14 @@ router.patch('/transactions/:id', (req, res) => {
     }
 
     // Validate category if provided
+    if (updates.transaction_primary && updates.transaction_detailed) {
+      if (!isValidPlaidCategory(updates.transaction_primary, updates.transaction_detailed)) {
+        return res.status(400).json({ error: 'Invalid Plaid category combination' });
+      }
+    }
+    // Also validate legacy category fields
     if (updates.primaryCategory && updates.detailedCategory) {
-      if (!isValidCategory(updates.primaryCategory, updates.detailedCategory)) {
+      if (!isValidPlaidCategory(updates.primaryCategory, updates.detailedCategory)) {
         return res.status(400).json({ error: 'Invalid category combination' });
       }
     }
@@ -217,12 +238,12 @@ router.patch('/transactions/:id', (req, res) => {
 
 /**
  * GET /api/categories
- * Get all available categories
+ * Get all available Plaid categories
  */
 router.get('/categories', (req, res) => {
   try {
     res.json({
-      categories: getCategories(),
+      categories: getPlaidCategories(),
       primaryCategories: getPrimaryCategories(),
     });
   } catch (error: any) {

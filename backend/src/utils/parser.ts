@@ -1,5 +1,6 @@
 import Papa from 'papaparse';
 import pdfParse from 'pdf-parse';
+import Tesseract from 'tesseract.js';
 import { Transaction, ParsedStatement } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -23,20 +24,54 @@ export async function parseCSV(fileBuffer: Buffer, fileName: string): Promise<Pa
           results.data.forEach((row: any) => {
             // Try to detect common column names (case-insensitive)
             const date = findColumn(row, ['date', 'transaction date', 'posting date', 'trans date']);
-            const amount = findColumn(row, ['amount', 'transaction amount', 'debit', 'credit']);
-            const description = findColumn(row, ['description', 'transaction description', 'details', 'memo', 'merchant']);
+            const description = findColumn(row, ['description', 'transaction description', 'details', 'memo', 'merchant', 'transaction text']);
             const balance = findColumn(row, ['balance', 'running balance', 'account balance']);
 
-            if (!date || !amount || !description) {
+            // Try to find payment in/out columns separately
+            const paymentIn = findColumn(row, ['payment in', 'credit', 'deposit', 'amount in', 'credits']);
+            const paymentOut = findColumn(row, ['payment out', 'debit', 'withdrawal', 'amount out', 'debits']);
+
+            // If payment in/out not found separately, try to detect from amount
+            const amount = findColumn(row, ['amount', 'transaction amount']);
+
+            if (!date || !description) {
               return; // Skip rows without essential data
             }
 
             const parsedDate = parseDate(date);
-            const parsedAmount = parseAmount(amount);
 
-            if (!parsedDate || isNaN(parsedAmount)) {
+            if (!parsedDate) {
               return; // Skip invalid data
             }
+
+            // Parse payment in and payment out
+            let parsedPaymentIn = 0;
+            let parsedPaymentOut = 0;
+
+            if (paymentIn && paymentOut) {
+              // Separate columns for payment in and out
+              parsedPaymentIn = parseAmount(paymentIn) || 0;
+              parsedPaymentOut = parseAmount(paymentOut) || 0;
+            } else if (amount) {
+              // Single amount column - determine direction
+              const parsedAmount = parseAmount(amount);
+              if (!isNaN(parsedAmount)) {
+                if (parsedAmount > 0) {
+                  parsedPaymentIn = parsedAmount;
+                } else {
+                  parsedPaymentOut = Math.abs(parsedAmount);
+                }
+              }
+            } else if (paymentIn) {
+              parsedPaymentIn = parseAmount(paymentIn) || 0;
+            } else if (paymentOut) {
+              parsedPaymentOut = parseAmount(paymentOut) || 0;
+            } else {
+              return; // Skip if no amount data
+            }
+
+            // Parse balance
+            const parsedBalance = balance ? parseAmount(balance) : undefined;
 
             // Track date range
             if (!minDate || parsedDate < minDate) minDate = parsedDate;
@@ -45,10 +80,16 @@ export async function parseCSV(fileBuffer: Buffer, fileName: string): Promise<Pa
             transactions.push({
               id: uuidv4(),
               date: parsedDate,
-              amount: parsedAmount,
-              currency: 'EUR', // Default, could be detected
+              transaction_text: description.trim(),
+              payment_in: parsedPaymentIn,
+              payment_out: parsedPaymentOut,
+              balance: parsedBalance,
+
+              // Legacy fields for backward compatibility
+              amount: parsedPaymentIn > 0 ? parsedPaymentIn : -parsedPaymentOut,
+              currency: 'EUR',
               rawDescription: description.trim(),
-              isIncome: parsedAmount > 0,
+              isIncome: parsedPaymentIn > 0,
             });
           });
 
@@ -145,9 +186,28 @@ function extractTransactionsFromPDFText(text: string): Transaction[] {
 
       if (description.length < 3) continue; // Skip if description too short
 
+      // Determine payment direction
+      const payment_in = amount > 0 ? amount : 0;
+      const payment_out = amount < 0 ? Math.abs(amount) : 0;
+
+      // Try to extract balance if present (usually the second-to-last number)
+      let balance: number | undefined = undefined;
+      if (amountMatches.length > 1) {
+        const potentialBalance = parseAmount(amountMatches[amountMatches.length - 2]);
+        if (!isNaN(potentialBalance)) {
+          balance = potentialBalance;
+        }
+      }
+
       transactions.push({
         id: uuidv4(),
         date,
+        transaction_text: description,
+        payment_in,
+        payment_out,
+        balance,
+
+        // Legacy fields for backward compatibility
         amount,
         currency: 'EUR',
         rawDescription: description,
@@ -227,4 +287,49 @@ function parseAmount(amountStr: string): number {
   }
 
   return parseFloat(cleaned);
+}
+
+/**
+ * Parse image bank statement using OCR
+ * Supports PNG, JPG, JPEG, and other image formats
+ */
+export async function parseImage(fileBuffer: Buffer, fileName: string): Promise<ParsedStatement> {
+  try {
+    console.log(`Starting OCR on image: ${fileName}`);
+
+    // Perform OCR on the image
+    const { data: { text } } = await Tesseract.recognize(
+      fileBuffer,
+      'eng',
+      {
+        logger: (m) => {
+          if (m.status === 'recognizing text') {
+            console.log(`OCR progress: ${Math.round(m.progress * 100)}%`);
+          }
+        },
+      }
+    );
+
+    console.log('OCR completed, extracting transactions...');
+
+    // Use the same transaction extraction logic as PDF
+    const transactions = extractTransactionsFromPDFText(text);
+
+    const dates = transactions.map(t => t.date).filter(Boolean).sort();
+    const dateRange = dates.length > 0 ? {
+      start: dates[0],
+      end: dates[dates.length - 1],
+    } : undefined;
+
+    return {
+      transactions,
+      metadata: {
+        fileName,
+        dateRange,
+      },
+    };
+  } catch (error) {
+    console.error('Error parsing image:', error);
+    throw new Error(`Error parsing image: ${error}`);
+  }
 }
