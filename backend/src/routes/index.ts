@@ -19,6 +19,10 @@ import {
   analyzeBatchWithBehavior,
   aggregateBehavioralRisks,
 } from '../services/behavioralAnalyzer';
+import {
+  processStatementComplete,
+  processSingleTransaction,
+} from '../services/enhancedPipeline';
 import { Transaction } from '../types';
 
 const router = express.Router();
@@ -28,8 +32,118 @@ let transactions: Transaction[] = [];
 let uploadedStatements: any[] = [];
 
 /**
+ * POST /api/upload-enhanced
+ * Enhanced pipeline: Vision → Plaid → Behavioral Analysis
+ * Supports: Multi-page PDF, Images (PNG, JPG)
+ */
+router.post('/upload-enhanced', async (req, res) => {
+  try {
+    if (!req.files || Object.keys(req.files).length === 0) {
+      return res.status(400).json({ error: 'No files uploaded' });
+    }
+
+    const files = Array.isArray(req.files.statements)
+      ? req.files.statements
+      : [req.files.statements];
+
+    const results = [];
+
+    // Get options from request body
+    const usePlaid = req.body.usePlaid !== 'false'; // Default true
+    const analyzeBehavior = req.body.analyzeBehavior !== 'false'; // Default true
+    const llmProvider = req.body.llmProvider || 'openai';
+
+    for (const file of files) {
+      const fileBuffer = file.data;
+      const fileName = file.name;
+
+      try {
+        console.log(`\n🚀 Processing: ${fileName} with enhanced pipeline`);
+
+        // Run complete pipeline: Vision → Plaid → Behavioral
+        const result = await processStatementComplete(fileBuffer, fileName, {
+          usePlaid,
+          analyzeBehavior,
+          llmProvider,
+          onProgress: (current, total, step) => {
+            console.log(`  ${step}: ${current}/${total}`);
+          },
+        });
+
+        // Add transactions to global store
+        result.transactions.forEach((txn) => {
+          const enhancement = result.enhancements.get(txn.id);
+          if (enhancement) {
+            txn.enhancedDescription = enhancement.enhancedDescription;
+            txn.merchant = enhancement.merchant;
+            txn.channel = enhancement.channel;
+            txn.primaryCategory = enhancement.primaryCategory;
+            txn.detailedCategory = enhancement.detailedCategory;
+            txn.categoryConfidence = enhancement.confidence;
+
+            // Behavioral fields
+            txn.behaviorRedFlags = enhancement.behaviorRedFlags;
+            txn.riskLevel = enhancement.riskLevel;
+            txn.healthScore = enhancement.healthScore;
+            txn.behaviorClassification = enhancement.behaviorClassification;
+            txn.interventionNeeded = enhancement.interventionNeeded;
+          }
+        });
+
+        transactions.push(...result.transactions);
+
+        // Store statement metadata
+        uploadedStatements.push({
+          id: fileName,
+          fileName,
+          fileType: fileName.toLowerCase().endsWith('.pdf') ? 'pdf' : 'image',
+          uploadDate: new Date().toISOString(),
+          pageCount: result.metadata.pageCount,
+          transactionCount: result.transactions.length,
+          dateRange: result.metadata.dateRange,
+          bankName: result.metadata.bankName,
+          accountNumber: result.metadata.accountNumber,
+        });
+
+        results.push({
+          fileName,
+          success: true,
+          transactionCount: result.transactions.length,
+          dateRange: result.metadata.dateRange,
+          summary: result.summary,
+          bankName: result.metadata.bankName,
+          accountNumber: result.metadata.accountNumber?.slice(-4), // Last 4 digits only
+        });
+      } catch (error: any) {
+        console.error(`Error processing ${fileName}:`, error);
+        results.push({
+          fileName,
+          success: false,
+          error: error.message,
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      results,
+      totalTransactions: transactions.length,
+      pipeline: {
+        vision: true,
+        plaid: usePlaid,
+        behavioral: analyzeBehavior,
+        llmProvider,
+      },
+    });
+  } catch (error: any) {
+    console.error('Upload enhanced error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
  * POST /api/upload
- * Upload and parse bank statements
+ * Upload and parse bank statements (legacy text-based parser)
  */
 router.post('/upload', async (req, res) => {
   try {
