@@ -13,6 +13,13 @@ export interface Transaction {
   merchant?: string;
   channel?: 'online' | 'in-store' | 'subscription' | 'unknown';
   flags?: string[];
+
+  // Behavioral analysis fields
+  behaviorRedFlags?: BehaviorRedFlag[];
+  riskLevel?: 'HEALTHY' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  healthScore?: number;  // 0-100
+  behaviorClassification?: 'GOOD' | 'NEUTRAL' | 'CONCERNING' | 'PROBLEMATIC';
+  interventionNeeded?: boolean;
 }
 
 export interface Category {
@@ -34,6 +41,16 @@ export interface UploadedStatement {
   };
 }
 
+export interface BehaviorRedFlag {
+  flagType: string;  // e.g., "GAMBLING_FREQUENT", "LATE_NIGHT_IMPULSE", "LUXURY_BEYOND_MEANS"
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  description: string;
+  recommendation: string;
+  potentialSavings?: number;
+  alternative?: string;
+  resourcesAvailable?: string;
+}
+
 export interface TransactionEnhancement {
   enhancedDescription: string;
   merchant?: string;
@@ -43,6 +60,13 @@ export interface TransactionEnhancement {
   detailedCategory: string;
   confidence: number;
   reasoning?: string;
+
+  // Behavioral analysis
+  behaviorRedFlags?: BehaviorRedFlag[];
+  riskLevel?: 'HEALTHY' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  healthScore?: number;  // 0-100
+  behaviorClassification?: 'GOOD' | 'NEUTRAL' | 'CONCERNING' | 'PROBLEMATIC';
+  interventionNeeded?: boolean;
 }
 
 export interface BehavioralInsights {

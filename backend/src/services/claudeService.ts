@@ -69,7 +69,7 @@ Respond in JSON format:
     // Return fallback enhancement
     return {
       enhancedDescription: transaction.rawDescription,
-      merchant: null,
+      merchant: undefined,
       channel: 'unknown',
       primaryCategory: transaction.isIncome ? 'INCOME' : 'UNCATEGORIZED',
       detailedCategory: transaction.isIncome ? 'INCOME_OTHER' : 'UNCATEGORIZED_UNKNOWN',

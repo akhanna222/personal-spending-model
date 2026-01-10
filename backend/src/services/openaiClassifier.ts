@@ -40,13 +40,13 @@ interface ClassificationTemplate {
  * Ensure all template keys exist in response data
  */
 function ensureKeys(template: ClassificationTemplate, data: any): ClassificationTemplate {
-  const result = { ...template };
+  const result: any = { ...template };
   for (const key in template) {
     if (key in data) {
-      result[key as keyof ClassificationTemplate] = data[key];
+      result[key] = data[key];
     }
   }
-  return result;
+  return result as ClassificationTemplate;
 }
 
 // ==========================================

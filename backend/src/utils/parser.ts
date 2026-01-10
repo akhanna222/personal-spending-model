@@ -63,7 +63,7 @@ export async function parseCSV(fileBuffer: Buffer, fileName: string): Promise<Pa
           reject(new Error(`Error parsing CSV: ${error}`));
         }
       },
-      error: (error) => {
+      error: (error: any) => {
         reject(new Error(`CSV parse error: ${error.message}`));
       },
     });

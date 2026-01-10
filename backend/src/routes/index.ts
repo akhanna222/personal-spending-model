@@ -14,6 +14,11 @@ import {
   isValidCategory,
 } from '../services/claudeService';
 import { generateInsights } from '../services/behavioralModel';
+import {
+  analyzeTransactionBehavior,
+  analyzeBatchWithBehavior,
+  aggregateBehavioralRisks,
+} from '../services/behavioralAnalyzer';
 import { Transaction } from '../types';
 
 const router = express.Router();
@@ -96,10 +101,10 @@ router.get('/transactions', (req, res) => {
 
     // Filter by date range
     if (req.query.startDate) {
-      filtered = filtered.filter(t => t.date >= req.query.startDate);
+      filtered = filtered.filter(t => t.date >= (req.query.startDate as string));
     }
     if (req.query.endDate) {
-      filtered = filtered.filter(t => t.date <= req.query.endDate);
+      filtered = filtered.filter(t => t.date <= (req.query.endDate as string));
     }
 
     // Filter by category
@@ -184,6 +189,114 @@ router.post('/transactions/enhance', async (req, res) => {
     });
   } catch (error: any) {
     console.error('Enhancement error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /api/transactions/analyze-behavior
+ * Analyze transactions with behavioral red flag detection
+ */
+router.post('/transactions/analyze-behavior', async (req, res) => {
+  try {
+    const { transactionIds, llmProvider } = req.body;
+
+    if (!transactionIds || !Array.isArray(transactionIds)) {
+      return res.status(400).json({ error: 'transactionIds array required' });
+    }
+
+    const toAnalyze = transactions.filter(t => transactionIds.includes(t.id));
+    if (toAnalyze.length === 0) {
+      return res.status(404).json({ error: 'No matching transactions found' });
+    }
+
+    // Use OpenAI by default for behavioral analysis (more cost-effective)
+    const useOpenAI = llmProvider === 'claude' ? false : true;
+
+    // Analyze in batch with behavioral detection
+    const enhancements = await analyzeBatchWithBehavior(toAnalyze, useOpenAI, (current, total) => {
+      console.log(`Analyzed ${current}/${total} transactions with behavioral detection`);
+    });
+
+    // Apply enhancements including behavioral flags
+    toAnalyze.forEach(t => {
+      const enhancement = enhancements.get(t.id);
+      if (enhancement) {
+        t.enhancedDescription = enhancement.enhancedDescription;
+        t.merchant = enhancement.merchant || undefined;
+        t.channel = enhancement.channel;
+        t.primaryCategory = enhancement.primaryCategory;
+        t.detailedCategory = enhancement.detailedCategory;
+        t.categoryConfidence = enhancement.confidence;
+
+        // Behavioral analysis fields
+        t.behaviorRedFlags = enhancement.behaviorRedFlags;
+        t.riskLevel = enhancement.riskLevel;
+        t.healthScore = enhancement.healthScore;
+        t.behaviorClassification = enhancement.behaviorClassification;
+        t.interventionNeeded = enhancement.interventionNeeded;
+      }
+    });
+
+    // Get aggregated behavioral risks across all analyzed transactions
+    const aggregatedRisks = aggregateBehavioralRisks(enhancements);
+
+    res.json({
+      success: true,
+      analyzed: toAnalyze.length,
+      behavioralInsights: aggregatedRisks,
+      transactions: toAnalyze,
+    });
+  } catch (error: any) {
+    console.error('Behavioral analysis error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /api/behavioral-risks
+ * Get aggregated behavioral risk insights across all transactions
+ */
+router.get('/behavioral-risks', (req, res) => {
+  try {
+    // Filter transactions that have been analyzed (have behavioral data)
+    const analyzedTransactions = transactions.filter(t => t.behaviorRedFlags !== undefined);
+
+    if (analyzedTransactions.length === 0) {
+      return res.json({
+        message: 'No transactions have been analyzed for behavioral risks yet',
+        totalTransactions: transactions.length,
+        analyzedTransactions: 0,
+      });
+    }
+
+    // Convert to Map format expected by aggregateBehavioralRisks
+    const enhancementsMap = new Map();
+    analyzedTransactions.forEach(t => {
+      enhancementsMap.set(t.id, {
+        enhancedDescription: t.enhancedDescription || t.rawDescription,
+        merchant: t.merchant,
+        channel: t.channel || 'unknown',
+        primaryCategory: t.primaryCategory || 'UNCATEGORIZED',
+        detailedCategory: t.detailedCategory || 'UNCATEGORIZED_UNKNOWN',
+        confidence: t.categoryConfidence || 0,
+        behaviorRedFlags: t.behaviorRedFlags,
+        riskLevel: t.riskLevel,
+        healthScore: t.healthScore,
+        behaviorClassification: t.behaviorClassification,
+        interventionNeeded: t.interventionNeeded,
+      });
+    });
+
+    const risks = aggregateBehavioralRisks(enhancementsMap);
+
+    res.json({
+      ...risks,
+      totalTransactions: transactions.length,
+      analyzedTransactions: analyzedTransactions.length,
+    });
+  } catch (error: any) {
+    console.error('Get behavioral risks error:', error);
     res.status(500).json({ error: error.message });
   }
 });
