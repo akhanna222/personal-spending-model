@@ -14,7 +14,7 @@ import { statementService } from '../services/statementService';
 import { transactionService } from '../services/transactionService';
 import authRoutes from './auth';
 import statementRoutes from './statements';
-import riskRoutes from './risks';
+import riskRoutes from './risks.db';
 
 const router = express.Router();
 
