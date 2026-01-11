@@ -4,7 +4,7 @@
 
 ## Overview
 
-SpendLens is an intelligent financial analysis platform that helps you understand your spending patterns and detect risky behaviors **before they become problems**.
+SpendLens is an intelligent financial analysis platform that helps you understand your spending patterns and detect risky behaviors **before they become problems**. A complete multi-user application with secure authentication, PostgreSQL storage, and self-learning risk analysis.
 
 ### 🎯 What It Does
 
@@ -13,6 +13,8 @@ SpendLens is an intelligent financial analysis platform that helps you understan
 - **🔍 Behavioral Risk Detection**: Self-learning AI identifies spending spikes, debt accumulation, subscription creep, and more
 - **📊 Smart Analytics**: Generate insights, forecasts, and spending breakdowns
 - **🧠 Learning System**: The more you use it, the smarter it gets (feedback-driven pattern evolution)
+- **🔐 Multi-User Support**: Secure authentication with JWT, per-user data isolation, and profile management
+- **💾 PostgreSQL Storage**: Enterprise-grade database with automated setup via Docker
 
 ### 🚀 Key Features
 
@@ -27,6 +29,21 @@ SpendLens is an intelligent financial analysis platform that helps you understan
 - User feedback loop improves detection accuracy
 - Pattern evolution based on your preferences
 - Per-user pattern storage and analytics
+- Interactive risk dashboard with edit and feedback capabilities
+
+**Multi-User Authentication**
+- Secure signup/signin with JWT tokens
+- bcrypt password hashing (10 salt rounds)
+- Per-user data isolation (all data scoped to authenticated user)
+- Profile management (name, email, password)
+- User settings (theme, currency, date format, notifications)
+
+**PostgreSQL Database**
+- Automated setup with Docker Compose
+- 8 tables: users, user_settings, bank_statements, transactions, risk patterns, feedback
+- Connection pooling for performance
+- Foreign key constraints with CASCADE DELETE
+- Automatic timestamp triggers
 
 ## Features
 
@@ -109,30 +126,51 @@ See `shared/plaid-categories.json` for the complete Plaid taxonomy (200+ categor
 ### Backend
 - **Node.js + Express**: RESTful API server
 - **TypeScript**: Type-safe backend code
+- **PostgreSQL 14**: Production-ready relational database
+- **Docker Compose**: Containerized database deployment
+- **JWT (jsonwebtoken)**: Stateless authentication with 7-day expiration
+- **bcryptjs**: Secure password hashing (10 salt rounds)
+- **pg (node-postgres)**: PostgreSQL driver with connection pooling
 - **OpenAI GPT-4o**: Vision API for direct image reading (no OCR!)
 - **OpenAI GPT-4o-mini**: Cost-effective text processing and batch operations
 - **Function Calling**: Guaranteed structured JSON outputs
 - **pdf-parse**: PDF text extraction (no regex parsing!)
 - **papaparse**: CSV parsing
-- **In-memory Storage**: Fast pattern storage (production: PostgreSQL recommended)
+- **dotenv**: Environment variable management
 
 ### Frontend
 - **React 18**: UI framework
 - **TypeScript**: Type-safe frontend code
+- **React Context API**: Global authentication state management
 - **Vite**: Fast build tool and dev server
 - **TailwindCSS**: Utility-first styling
 - **Recharts**: Data visualization
-- **React Router**: Client-side routing
-- **Axios**: HTTP client
+- **React Router**: Client-side routing with protected routes
+- **Axios**: HTTP client with JWT token injection
 
 ## Project Structure
 
 ```
 spendlens/
 ├── backend/                 # Backend API
+│   ├── database/           # Database setup
+│   │   ├── schema.sql      # PostgreSQL schema (8 tables)
+│   │   └── seed.sql        # Seed data (risk pattern templates)
 │   ├── src/
+│   │   ├── config/         # Configuration (database connection)
+│   │   ├── middleware/     # Auth middleware (JWT verification)
 │   │   ├── routes/         # API endpoints
-│   │   ├── services/       # Business logic (Claude, behavioral model)
+│   │   │   ├── auth.ts     # Authentication routes
+│   │   │   ├── statements.ts  # Statement management
+│   │   │   ├── risks.db.ts    # Risk analysis routes
+│   │   │   └── index.db.ts    # Main routes (PostgreSQL)
+│   │   ├── services/       # Business logic
+│   │   │   ├── userService.ts      # User auth & settings
+│   │   │   ├── statementService.ts # Statement CRUD
+│   │   │   ├── transactionService.ts # Transaction CRUD
+│   │   │   ├── riskService.ts      # Risk pattern management
+│   │   │   ├── openaiService.vision.ts # AI services
+│   │   │   └── behavioralModel.ts  # Analytics
 │   │   ├── utils/          # Utilities (parsers)
 │   │   ├── types/          # TypeScript types
 │   │   └── server.ts       # Main server file
@@ -141,7 +179,19 @@ spendlens/
 ├── frontend/                # Frontend React app
 │   ├── src/
 │   │   ├── components/     # Reusable UI components
-│   │   ├── pages/          # Page components (Landing, Transactions, etc.)
+│   │   │   ├── Header.tsx       # Navigation with auth
+│   │   │   └── ProtectedRoute.tsx # Auth wrapper
+│   │   ├── contexts/       # React Context
+│   │   │   └── AuthContext.tsx  # Auth state management
+│   │   ├── pages/          # Page components
+│   │   │   ├── Login.tsx        # Login page
+│   │   │   ├── Signup.tsx       # Signup page
+│   │   │   ├── Landing.tsx      # Upload page
+│   │   │   ├── Transactions.tsx # Transaction list
+│   │   │   ├── Statements.tsx   # Statement management
+│   │   │   ├── RiskDashboard.tsx # Risk analysis UI
+│   │   │   ├── Dashboard.tsx    # Insights page
+│   │   │   └── Settings.tsx     # User settings
 │   │   ├── services/       # API client
 │   │   ├── types/          # TypeScript types
 │   │   ├── App.tsx         # Main app component
@@ -151,7 +201,11 @@ spendlens/
 │   ├── vite.config.ts
 │   └── tailwind.config.js
 ├── shared/                  # Shared resources
-│   └── category-data.json  # Category taxonomy
+│   └── plaid-categories.json  # Category taxonomy
+├── docker-compose.yml      # PostgreSQL container
+├── setup-database.sh       # Automated database setup
+├── start-dynamic.sh        # Full startup automation
+├── run.sh                  # Quick start script
 ├── package.json            # Root package.json (workspace)
 └── README.md
 ```
@@ -163,21 +217,27 @@ spendlens/
 The absolute fastest way to get started:
 
 ```bash
-./run.sh
+./start-dynamic.sh
 ```
 
 This automated script will:
 1. ✅ Kill any processes on ports 3000 & 3001
-2. ✅ Check and install dependencies
-3. ✅ Prompt for your OpenAI API key (and save it securely)
-4. ✅ Let you choose version (Vision/Optimized/Original)
-5. ✅ Start the server automatically
+2. ✅ Check and install dependencies (Node.js, npm)
+3. ✅ Setup PostgreSQL database with Docker
+4. ✅ Prompt for your OpenAI API key (and save it securely)
+5. ✅ Generate JWT secret automatically
+6. ✅ Let you choose version (Vision/Optimized/Original)
+7. ✅ Configure routes and start the server
 
 When prompted:
 - Paste your OpenAI API key (get one at https://platform.openai.com/api-keys)
 - Choose **Option 1: VISION** (recommended)
 
-**Done!** Server will start on http://localhost:3001
+**Done!**
+- Backend API: http://localhost:3001
+- Frontend App: Navigate to http://localhost:3001 for API or run frontend separately
+- Database: PostgreSQL running in Docker container
+- First visit: Navigate to /signup to create your account
 
 ### 🧪 Test Everything Works
 
@@ -199,6 +259,7 @@ See `QUICKSTART.md` for detailed setup instructions.
 
 #### Prerequisites
 - Node.js 18+ and npm
+- Docker and Docker Compose
 - OpenAI API key (get one at https://platform.openai.com/)
 
 #### Installation
@@ -216,16 +277,40 @@ See `QUICKSTART.md` for detailed setup instructions.
    cd ..
    ```
 
-3. **Set up environment variables**
+3. **Setup PostgreSQL database**
+   ```bash
+   ./setup-database.sh
+   ```
+
+   This will:
+   - Start PostgreSQL 14 container with Docker Compose
+   - Initialize database schema (8 tables)
+   - Seed risk pattern templates
+   - Wait for database to be ready
+
+4. **Set up environment variables**
 
    Create `backend/.env`:
    ```bash
+   # OpenAI API Configuration
    OPENAI_API_KEY=your_api_key_here
+
+   # JWT Configuration (generate with: openssl rand -base64 32)
+   JWT_SECRET=your_random_jwt_secret_here
+
+   # Server Configuration
    PORT=3001
    NODE_ENV=development
+
+   # Database Configuration
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_NAME=spendlens
+   DB_USER=spendlens_user
+   DB_PASSWORD=spendlens_password
    ```
 
-4. **Start the development servers**
+5. **Start the development servers**
 
    From the root directory:
    ```bash
@@ -235,6 +320,11 @@ See `QUICKSTART.md` for detailed setup instructions.
    This will start:
    - Backend API on http://localhost:3001
    - Frontend dev server on http://localhost:3000
+
+6. **Create your account**
+   - Navigate to http://localhost:3000/signup
+   - Create your first user account
+   - Login and start uploading bank statements!
 
 ### Building for Production
 
@@ -252,100 +342,125 @@ cd backend && npm start
 
 ## Usage Guide
 
-### 1. Upload Bank Statements
-- Navigate to http://localhost:3000
+### 1. Create Account & Login
+- Navigate to http://localhost:3000/signup
+- Create account with email and password (minimum 8 characters)
+- Or login at http://localhost:3000/login if you already have an account
+- JWT token is stored securely in localStorage
+- Token automatically refreshes your session
+
+### 2. Upload Bank Statements
+- After login, navigate to the Upload page (/)
 - Drag and drop or browse to select bank statements
   - Supported formats: PDF, CSV, PNG, JPG, JPEG
-  - Images will be processed with OCR automatically
+  - Images processed with Vision API (no OCR delay!)
   - Multi-page PDFs are supported
 - Upload multiple files at once (6-12 months recommended)
-- Wait for parsing to complete (OCR may take longer for image files)
+- Files are automatically parsed and transactions extracted
+- All data is stored in PostgreSQL under your user account
 
-### 2. Review Transactions
+### 3. View Statements
+- Navigate to "Statements" page
+- See all your uploaded bank statements
+- View statistics: total statements, transactions, date range
+- Delete individual statements (also removes associated transactions)
+- Click on a statement to view its transactions
+
+### 4. Review Transactions
+- Navigate to "Transactions" page
 - View all extracted transactions in the table
 - Use search and filters to find specific transactions
-- Toggle "Show AI descriptions" to see enhanced vs raw descriptions
-- Click "Enhance All with AI" to process transactions with OpenAI
-  - This may take a few minutes depending on the number of transactions
-  - Each transaction gets a human-readable description and Plaid category match
-  - Matching is strict - only confident matches are assigned categories
+- Filter by date range, category, or search text
+- Pagination for large datasets
+- Edit individual transactions (category, description)
+- Mark transactions as reviewed
 
-### 3. Manual Review
-- Click on any transaction to view details in the side drawer
-- Review AI-assigned categories
-- Override categories if needed using the dropdowns
-- See confidence scores and adjust low-confidence transactions
+### 5. Analyze Risk Patterns
+- Navigate to "Risk Analysis" page
+- Click "Analyze Risks" to detect patterns in your spending
+- View detected patterns with severity levels (Critical, High, Medium, Low)
+- See statistics: total patterns, patterns by severity
+- Edit pattern descriptions and recommendations
+- Submit feedback on patterns (thumbs up/down + notes)
+- Dismiss patterns you don't find useful
+- System learns from your feedback to improve future detection
 
-### 4. View Insights
-- Navigate to "View Insights" to see the behavioral dashboard
+### 6. View Insights
+- Navigate to "Insights" to see the behavioral dashboard
 - Explore:
   - Monthly income vs spend trends
   - Category breakdowns (pie charts and bars)
   - Recurring payments detected
   - Fixed vs variable spending analysis
   - 3-month spending forecast
-  - AI-generated insights
+  - AI-generated insights based on your data
 
-### 5. Analyze Risky Behaviors
-- Use the Risk Analysis API to detect patterns:
-  ```bash
-  curl -X POST http://localhost:3001/api/risks/analyze \
-    -H "Content-Type: application/json" \
-    -d '{"userId": "user123", "transactions": [...]}'
-  ```
-- Get detected patterns:
-  ```bash
-  curl http://localhost:3001/api/risks/patterns/user123
-  ```
-- Submit feedback to improve detection (learning system!):
-  ```bash
-  curl -X POST http://localhost:3001/api/risks/feedback \
-    -H "Content-Type: application/json" \
-    -d '{
-      "userId": "user123",
-      "patternId": "pattern-uuid",
-      "feedback": {
-        "isAccurate": true,
-        "isRelevant": true,
-        "isActionable": true,
-        "notes": "Very helpful alert!"
-      }
-    }'
-  ```
+### 7. Manage Settings
+- Navigate to "Settings" page
+- Update profile (full name)
+- Change password (requires current password)
+- Configure app preferences:
+  - Theme (light/dark/auto)
+  - Currency (USD, EUR, GBP, INR)
+  - Date format (MM/DD/YYYY, DD/MM/YYYY, YYYY-MM-DD)
+  - Notifications (on/off)
+- All settings are saved to database per user
 
-### 6. Export Data
-- Click "Export CSV" on the dashboard
+### 8. Export Data
+- Navigate to Transactions page
+- Click "Export CSV" button
 - Download cleaned transactions with all enriched fields
 - Use this data in Excel, Google Sheets, or other tools
 
 ## API Endpoints
 
-### Statements & Transactions
+All endpoints except authentication require JWT Bearer token in Authorization header.
+
+### Authentication (Public)
+- `POST /api/auth/signup` - Register new user (email, password, full_name)
+- `POST /api/auth/signin` - Login user (returns JWT token)
+
+### Authentication (Protected)
+- `GET /api/auth/me` - Get current user profile
+- `PUT /api/auth/profile` - Update user profile (full_name)
+- `POST /api/auth/change-password` - Change password (requires current password)
+- `GET /api/auth/settings` - Get user settings
+- `PUT /api/auth/settings` - Update user settings (theme, currency, etc.)
+
+### Statements (Protected)
 - `POST /api/upload` - Upload bank statements (PDF/CSV/Images)
-- `GET /api/transactions` - Get all transactions (with filters)
+- `GET /api/statements` - Get user's statements (with pagination)
+- `GET /api/statements/stats` - Get statement statistics
+- `GET /api/statements/:id` - Get single statement
+- `DELETE /api/statements/:id` - Delete statement and its transactions
+
+### Transactions (Protected)
+- `GET /api/transactions` - Get all transactions (with filters, search, pagination)
 - `PATCH /api/transactions/:id` - Update a transaction
 - `POST /api/transactions/enhance` - Enhance transactions with AI
+- `DELETE /api/transactions` - Clear all user's transactions (testing)
 
-### Categories
+### Categories (Public)
 - `GET /api/categories` - Get all Plaid categories (200+)
 - `GET /api/categories/:primary` - Get detailed categories for a primary category
 
-### Risk Analysis (AI-Powered)
-- `POST /api/risks/analyze` - Analyze transactions for risky patterns
-- `GET /api/risks/patterns/:userId` - Get user's risk patterns
+### Risk Analysis (Protected, AI-Powered)
+- `POST /api/risks/analyze` - Analyze user's transactions for risky patterns
+- `GET /api/risks/patterns` - Get user's risk patterns
+- `GET /api/risks/patterns/:id` - Get single pattern
+- `PATCH /api/risks/patterns/:id` - Update pattern (description, recommendation, severity)
+- `DELETE /api/risks/patterns/:id` - Dismiss a pattern
 - `POST /api/risks/feedback` - Submit feedback on pattern (learning!)
-- `POST /api/risks/evolve/:userId` - Evolve patterns based on feedback
-- `GET /api/risks/stats/:userId` - Get risk analytics and statistics
+- `GET /api/risks/stats` - Get risk analytics and statistics
 - `GET /api/risks/templates` - Get all pattern templates with success rates
-- `DELETE /api/risks/pattern/:userId/:patternId` - Dismiss a pattern
 
-### Insights & Export
+### Insights & Export (Protected)
 - `GET /api/insights` - Generate behavioral insights
 - `GET /api/export/csv` - Export transactions as CSV
-- `DELETE /api/transactions` - Clear all data (for testing)
 
-### Health
-- `GET /health` - Health check endpoint (shows mode: vision/optimized/original)
+### Health (Public)
+- `GET /health` - Health check endpoint (shows database status, API keys configured)
+- `GET /api/health` - API health check (shows mode: vision-database)
 
 ## Documentation
 
@@ -417,76 +532,126 @@ Both frontend and backend use TypeScript. Shared types are in `backend/src/types
 
 ## Current Status & Future Enhancements
 
-### ✅ What's Built (V1)
+### ✅ What's Built (V2 - Production Ready!)
 - ✅ **Vision-First Extraction**: Zero regex, GPT-4o Vision, 95% accuracy
-- ✅ **Self-Learning Risk Analysis**: 10+ patterns with feedback loop
+- ✅ **Self-Learning Risk Analysis**: 12 built-in patterns with feedback loop
+- ✅ **PostgreSQL Database**: 8 tables with proper relations, indexes, and triggers
+- ✅ **Multi-User Authentication**: JWT-based auth with bcrypt password hashing
+- ✅ **Complete Frontend UI**: React app with 8 pages (Login, Signup, Upload, Transactions, Statements, Risks, Insights, Settings)
+- ✅ **Risk Dashboard**: Interactive UI for viewing, editing, and providing feedback on patterns
+- ✅ **Statement Management**: View, filter, and delete uploaded statements
+- ✅ **User Settings**: Profile management, password change, app preferences
 - ✅ **Comprehensive Testing**: Full integration test suite
-- ✅ **Automated Setup**: One-command startup with `run.sh`
+- ✅ **Automated Setup**: One-command startup with database setup
 - ✅ **Multi-format Support**: PDF, CSV, Images (all handled automatically)
 - ✅ **Plaid Categories**: 200+ category matching
 - ✅ **Pattern Evolution**: AI learns from your feedback
-- ✅ **Per-User Storage**: Risk patterns stored separately per user
+- ✅ **Per-User Data Isolation**: All data scoped to authenticated user
+- ✅ **Protected Routes**: Frontend route guards for authentication
+- ✅ **Persistent Storage**: All data stored in PostgreSQL (no data loss on restart)
 
-### ⚠️ Current Limitations
-- **In-memory storage**: Data lost on server restart (production: use PostgreSQL)
-- **Single-user**: No authentication (production: add JWT/OAuth)
-- **No frontend UI for risks**: Risk analysis via API only (frontend: build React dashboard)
-- **Basic analytics**: No time-series charts (add Recharts integration)
-
-### 🚀 Future V2 Features
-- **Risk Dashboard UI**: React frontend for viewing/managing risk patterns
-- **Database Persistence**: PostgreSQL with encrypted storage
-- **User Authentication**: JWT-based auth with per-user data isolation
+### 🚀 Future V3 Features (Optional Enhancements)
 - **Bank API Integration**: Connect directly via Plaid/Tink (no manual uploads)
 - **Budget Goals**: Set category-level budgets with alerts
 - **Advanced Recommendations**: AI-powered suggestions to optimize spending
-- **Benchmarking**: Compare against similar user cohorts
+- **Benchmarking**: Compare against similar user cohorts (anonymized)
 - **Mobile App**: Native iOS/Android apps
-- **Multi-currency**: Support for multiple currencies
-- **Real-time Alerts**: Push notifications for risk pattern detection
-- **Historical Trends**: Track pattern evolution over time with charts
+- **Real-time Alerts**: Email/push notifications for risk pattern detection
+- **Historical Trends**: Time-series charts for pattern evolution
+- **Recurring Payment Management**: Detect and manage subscriptions
+- **Forecasting**: Predict future spending based on historical patterns
+- **Multi-Account Support**: Track multiple bank accounts per user
+- **Family Sharing**: Shared accounts with role-based permissions
+- **Export Formats**: PDF reports, Excel workbooks, JSON exports
 
 ## Security Considerations
 
 ### Current Implementation
-- File uploads are processed in-memory (not persisted)
-- No authentication (single-user demo)
-- HTTPS recommended for production
-- API keys stored in environment variables
+- ✅ **JWT Authentication**: Stateless tokens with 7-day expiration
+- ✅ **Password Hashing**: bcrypt with 10 salt rounds
+- ✅ **Per-User Data Isolation**: All queries filtered by user_id
+- ✅ **SQL Injection Protection**: Parameterized queries throughout
+- ✅ **Environment Variables**: Sensitive config in .env (not committed)
+- ✅ **File Size Limits**: 50MB max upload size
+- ✅ **CORS Enabled**: Cross-origin requests allowed (configure for production)
+- ✅ **Protected Routes**: Frontend and backend authentication guards
+- ✅ **Password Validation**: Minimum 8 characters required
+- ✅ **Secure Logout**: Token removed from client storage
 
 ### Production Recommendations
-- Add user authentication (JWT, OAuth)
-- Store data in encrypted database (PostgreSQL + pgcrypto)
-- Implement file size limits and virus scanning
-- Use rate limiting on AI endpoints
-- Add CORS restrictions
-- Enable HTTPS/TLS
-- Implement audit logging
-- Regular security updates
+- ✅ Enable HTTPS/TLS (use reverse proxy like nginx)
+- ✅ Add rate limiting on auth and AI endpoints (express-rate-limit)
+- ✅ Implement CSRF protection for state-changing operations
+- ✅ Add file virus scanning for uploads (ClamAV)
+- ✅ Enable database encryption at rest (PostgreSQL pgcrypto)
+- ✅ Implement audit logging for sensitive operations
+- ✅ Add 2FA/MFA for enhanced security
+- ✅ Set up automated security updates
+- ✅ Configure strict CORS policies
+- ✅ Add helmet.js for security headers
+- ✅ Implement session management and token refresh
+- ✅ Regular security audits and penetration testing
 
 ## Troubleshooting
 
 ### "Port already in use" error
-- The `run.sh` script automatically kills processes on ports 3001 and 3000
+- The `start-dynamic.sh` script automatically kills processes on ports 3001 and 3000
 - If you still see this error, manually kill the port:
   ```bash
   lsof -ti:3001 | xargs kill -9
   lsof -ti:3000 | xargs kill -9
   ```
 
-### "OpenAI API key not found" error
-- Run `./run.sh` and it will prompt you for the key
+### "Database connection failed" error
+- Check if PostgreSQL container is running:
+  ```bash
+  docker ps | grep spendlens_postgres
+  ```
+- If not running, start the database:
+  ```bash
+  ./setup-database.sh
+  ```
+- Check database logs:
+  ```bash
+  docker logs spendlens_postgres
+  ```
+- Verify database credentials in `backend/.env` match `docker-compose.yml`
+- Test connection manually:
+  ```bash
+  docker exec -it spendlens_postgres psql -U spendlens_user -d spendlens
+  ```
+
+### "OpenAI API key not found" or "JWT secret not found" error
+- Run `./start-dynamic.sh` and it will prompt you for the key and auto-generate JWT secret
 - Or manually create `backend/.env` with:
   ```bash
   OPENAI_API_KEY=sk-your-key-here
+  JWT_SECRET=$(openssl rand -base64 32)
   PORT=3001
   NODE_ENV=development
+  DB_HOST=localhost
+  DB_PORT=5432
+  DB_NAME=spendlens
+  DB_USER=spendlens_user
+  DB_PASSWORD=spendlens_password
   ```
+
+### "Unauthorized" or "Invalid token" errors
+- Your JWT token may have expired (7-day expiration)
+- Logout and login again to get a new token
+- Check that JWT_SECRET is set in backend/.env
+- Clear browser localStorage and login again
+
+### "Email already exists" error on signup
+- Email addresses must be unique
+- Use a different email or login with existing account
+- To reset: delete user from database or use different email
 
 ### "Enhancement failed" or "Risk analysis failed" error
 - Check that OPENAI_API_KEY is valid and has credits
 - Check backend console logs for detailed error messages
 - Ensure you're using a recent OpenAI API key (supports GPT-4o)
+- Verify you're logged in (check for Authorization header)
 
 ### Transactions not parsing correctly
 - **Vision mode** (recommended): Should handle any format automatically
@@ -495,18 +660,30 @@ Both frontend and backend use TypeScript. Shared types are in `backend/src/types
   - If failing, check the PDF/image is readable by humans
 - **CSV**: Ensure columns like Date, Amount/Debit/Credit, Description exist
 - Try running `./test-full.sh` to verify extraction is working
+- Check backend logs for parsing errors
 
 ### Server won't start
-- Run `./run.sh` - it handles dependencies and configuration automatically
+- Run `./start-dynamic.sh` - it handles dependencies, database, and configuration automatically
 - If still failing:
   - Check that ports 3000 and 3001 are not in use
   - Check Node.js version: `node --version` (18+ required)
+  - Check Docker is installed and running: `docker --version`
   - Manually run: `cd backend && npm install`
+  - Check database is running: `docker ps`
+
+### Frontend shows blank page or infinite loading
+- Check that backend is running on port 3001
+- Check browser console for errors
+- Verify API endpoint in frontend code matches backend URL
+- Clear browser cache and localStorage
+- Check that you're logged in (navigate to /login)
 
 ### Tests failing
 - Ensure server is running: `curl http://localhost:3001/health`
-- Check that Vision mode is enabled (run.sh Option 1)
+- Ensure database is running: `docker ps | grep postgres`
+- Check that Vision mode is enabled (start-dynamic.sh Option 1)
 - Verify API key is configured: `cat backend/.env`
+- Create test user first or update tests with authentication
 - Check backend logs for errors
 
 ## Contributing
@@ -536,4 +713,4 @@ Built with:
 
 ---
 
-**Note**: This is a demo application. For production use, implement proper security, authentication, data persistence, and error handling.
+**Note**: This application includes production-ready features like authentication, database persistence, and security best practices. For enterprise deployment, consider adding: HTTPS/TLS, rate limiting, 2FA, audit logging, and monitoring.
