@@ -1,12 +1,9 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { uploadStatements } from '../services/api';
+import Header from '../components/Header';
 
-interface LandingProps {
-  onUploadComplete: () => void;
-}
-
-export default function Landing({ onUploadComplete }: LandingProps) {
+export default function Landing() {
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<{
@@ -55,7 +52,6 @@ export default function Landing({ onUploadComplete }: LandingProps) {
         message: `Successfully uploaded ${response.totalTransactions} transactions`,
         results: response.results,
       });
-      onUploadComplete();
 
       // Navigate to transactions page after a short delay
       setTimeout(() => {
@@ -76,20 +72,9 @@ export default function Landing({ onUploadComplete }: LandingProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-cyan-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="text-2xl font-bold text-primary">SpendLens</div>
-          </div>
-          <nav className="flex gap-6 text-sm text-gray-600">
-            <a href="#how-it-works" className="hover:text-primary">How it works</a>
-            <a href="#security" className="hover:text-primary">Security</a>
-          </nav>
-        </div>
-      </header>
-
+    <div>
+      <Header />
+      <div className="min-h-screen bg-gradient-to-br from-sky-50 to-cyan-50">
       {/* Hero Section */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center mb-12">
@@ -266,6 +251,7 @@ export default function Landing({ onUploadComplete }: LandingProps) {
           </p>
         </div>
       </section>
+      </div>
     </div>
   );
 }
