@@ -649,21 +649,67 @@ Each detected pattern has:
 
 ## 🎉 You're Ready!
 
-Start analyzing risks:
+### Quick Start
+
 ```bash
-# 1. Start server
+# 1. Start server (choose Vision mode)
 ./run.sh
 
-# 2. Upload transactions
+# 2. Run comprehensive tests (includes risk analysis!)
+./test-full.sh
+```
+
+The test suite validates:
+- ✅ Risk pattern detection (10+ built-in patterns)
+- ✅ Learning system with feedback loop
+- ✅ Pattern storage per user
+- ✅ Analytics and statistics
+- ✅ All API endpoints functional
+
+### Manual Testing
+
+```bash
+# 1. Upload transactions
 curl -X POST http://localhost:3001/api/upload \
   -F "statements=@statement.pdf"
+
+# 2. Get extracted transactions
+TRANSACTIONS=$(curl -s http://localhost:3001/api/transactions | jq '.transactions')
 
 # 3. Analyze risks
 curl -X POST http://localhost:3001/api/risks/analyze \
   -H "Content-Type: application/json" \
-  -d '{"userId":"me", "transactions":[...]}'
+  -d "{\"userId\":\"me\", \"transactions\":$TRANSACTIONS}"
 
-# 4. Review patterns and provide feedback!
+# 4. View detected patterns
+curl http://localhost:3001/api/risks/patterns/me | jq
+
+# 5. Submit feedback (teach the system!)
+curl -X POST http://localhost:3001/api/risks/feedback \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userId": "me",
+    "patternId": "<pattern-id-from-step-4>",
+    "feedback": {
+      "isAccurate": true,
+      "isRelevant": true,
+      "isActionable": true,
+      "notes": "Very helpful alert!"
+    }
+  }'
+
+# 6. Check statistics
+curl http://localhost:3001/api/risks/stats/me | jq
 ```
 
 **The system learns from YOU!** 🧠
+
+### Production Deployment
+
+For production use:
+1. Replace in-memory storage with PostgreSQL
+2. Add user authentication (JWT/OAuth)
+3. Set up background jobs for async analysis
+4. Implement rate limiting on risk endpoints
+5. Add real-time notifications (WebSocket/Push)
+6. Build React dashboard for risk visualization

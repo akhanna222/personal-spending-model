@@ -47,6 +47,8 @@ Backend: http://localhost:3001
 
 ## Testing the API
 
+### Quick API Test
+
 In a **new terminal window**, run:
 
 ```bash
@@ -55,6 +57,64 @@ In a **new terminal window**, run:
 
 # Test with a sample statement
 ./test-api.sh /path/to/your/statement.pdf
+```
+
+### Comprehensive Integration Test
+
+Run the full test suite to verify all components are working:
+
+```bash
+./test-full.sh
+```
+
+This comprehensive test validates:
+- ✅ Server health and configuration
+- ✅ Plaid category loading (200+ categories)
+- ✅ Vision-based transaction extraction
+- ✅ AI-powered risk pattern detection
+- ✅ Learning system with feedback loop
+- ✅ Pattern storage per user
+- ✅ Risk analytics and statistics
+- ✅ CSV export functionality
+
+**Expected Output:**
+```
+🧪 SpendLens Integration Test Suite
+
+Test 1/10: Health Check
+✅ PASSED - Server is healthy, vision mode enabled
+
+Test 2/10: Get Categories
+✅ PASSED - 200+ Plaid categories loaded
+
+Test 3/10: Upload Statement
+✅ PASSED - Sample CSV uploaded successfully
+
+Test 4/10: Get Transactions
+✅ PASSED - 5 transactions extracted
+
+Test 5/10: Risk Analysis
+✅ PASSED - 2 risk patterns detected
+
+Test 6/10: Get Risk Patterns
+✅ PASSED - Risk patterns stored per user
+
+Test 7/10: Submit Feedback
+✅ PASSED - Learning system recorded feedback
+
+Test 8/10: Get Risk Statistics
+✅ PASSED - Risk analytics working
+
+Test 9/10: Get Pattern Templates
+✅ PASSED - 10 pattern templates available
+
+Test 10/10: Export CSV
+✅ PASSED - CSV export functional
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Total Tests: 10 | Passed: 10 | Failed: 0
+
+🎉 ALL TESTS PASSED! 🎉
 ```
 
 ---
@@ -308,27 +368,57 @@ Once the server is running:
 
 ## API Endpoints
 
-### Upload
+### Statements & Transactions
 ```bash
+# Upload bank statement (PDF/CSV/Image)
 POST /api/upload
 Content-Type: multipart/form-data
 Body: statements=@file.pdf
-```
 
-### Get Transactions
-```bash
+# Get all transactions
 GET /api/transactions
 Query: ?page=1&limit=50&search=starbucks
-```
 
-### Get Categories
-```bash
+# Get Plaid categories
 GET /api/categories
+
+# Export as CSV
+GET /api/export/csv
 ```
 
-### Export CSV
+### Risk Analysis (AI-Powered)
 ```bash
-GET /api/export/csv
+# Analyze transactions for risky patterns
+POST /api/risks/analyze
+Body: { userId: "user123", transactions: [...] }
+
+# Get user's risk patterns
+GET /api/risks/patterns/:userId
+
+# Submit feedback on a pattern (learning!)
+POST /api/risks/feedback
+Body: {
+  userId: "user123",
+  patternId: "pattern-uuid",
+  feedback: {
+    isAccurate: true,
+    isRelevant: true,
+    isActionable: true,
+    notes: "Very helpful!"
+  }
+}
+
+# Evolve patterns based on feedback
+POST /api/risks/evolve/:userId
+
+# Get risk statistics
+GET /api/risks/stats/:userId
+
+# Get pattern templates
+GET /api/risks/templates
+
+# Dismiss a pattern
+DELETE /api/risks/pattern/:userId/:patternId
 ```
 
 ### Health Check
