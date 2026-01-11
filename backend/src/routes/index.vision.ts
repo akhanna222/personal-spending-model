@@ -9,6 +9,7 @@ import {
 } from '../services/openaiService.vision';
 import { generateInsights } from '../services/behavioralModel';
 import { Transaction } from '../types';
+import riskRoutes from './risks';
 
 const router = express.Router();
 
@@ -286,5 +287,10 @@ router.get('/health', (req, res) => {
     },
   });
 });
+
+/**
+ * Mount risk analysis routes
+ */
+router.use('/risks', riskRoutes);
 
 export default router;
