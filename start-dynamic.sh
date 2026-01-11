@@ -83,6 +83,32 @@ check_dependencies() {
     fi
 }
 
+# Function to setup database
+setup_database() {
+    echo ""
+    echo -e "${BLUE}🗄️  Database Setup${NC}"
+    echo ""
+
+    # Check if database is already running
+    if docker ps | grep -q spendlens_postgres; then
+        echo -e "${GREEN}✅ PostgreSQL database is already running${NC}"
+        return 0
+    fi
+
+    echo -e "${CYAN}Setting up PostgreSQL database with Docker...${NC}"
+    echo ""
+
+    # Run database setup script
+    if [ -f "./setup-database.sh" ]; then
+        chmod +x ./setup-database.sh
+        ./setup-database.sh
+    else
+        echo -e "${YELLOW}⚠️  setup-database.sh not found. Skipping database setup.${NC}"
+        echo -e "${YELLOW}   Note: You'll need to set up PostgreSQL manually.${NC}"
+        echo ""
+    fi
+}
+
 # Function to get or create OpenAI API key
 setup_api_key() {
     echo ""
@@ -125,24 +151,43 @@ setup_api_key() {
         fi
     fi
 
+    # Generate JWT secret if not exists
+    if [ -f "$ENV_FILE" ] && grep -q "JWT_SECRET" "$ENV_FILE"; then
+        # JWT secret already exists, preserve it
+        local jwt_secret=$(grep JWT_SECRET "$ENV_FILE" | cut -d'=' -f2)
+    else
+        # Generate new JWT secret
+        jwt_secret=$(openssl rand -base64 32 2>/dev/null || cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
+    fi
+
     # Create or update .env file
     mkdir -p backend
     cat > "$ENV_FILE" << EOF
 # OpenAI API Configuration
 OPENAI_API_KEY=$new_api_key
 
+# JWT Configuration
+JWT_SECRET=$jwt_secret
+
 # Server Configuration
 PORT=3001
 NODE_ENV=development
 
-# Created by start script on $(date)
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=spendlens
+DB_USER=spendlens_user
+DB_PASSWORD=spendlens_password
+
+# Created/Updated by start script on $(date)
 EOF
 
     chmod 600 "$ENV_FILE"  # Secure the file
     export OPENAI_API_KEY=$new_api_key
 
     echo ""
-    echo -e "${GREEN}✅ API key saved to $ENV_FILE${NC}"
+    echo -e "${GREEN}✅ Configuration saved to $ENV_FILE${NC}"
     echo -e "${YELLOW}🔒 File permissions set to 600 (secure)${NC}"
 }
 
@@ -262,16 +307,19 @@ main() {
     # Step 2: Check dependencies
     check_dependencies
 
-    # Step 3: Setup API key
+    # Step 3: Setup database
+    setup_database
+
+    # Step 4: Setup API key
     setup_api_key
 
-    # Step 4: Choose version
+    # Step 5: Choose version
     choose_version
 
-    # Step 5: Configure routes
+    # Step 6: Configure routes
     configure_routes
 
-    # Step 6: Start server
+    # Step 7: Start server
     start_server
 }
 
