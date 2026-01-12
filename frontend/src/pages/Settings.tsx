@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/Header';
@@ -12,8 +11,7 @@ interface UserSettings {
 }
 
 export default function Settings() {
-  const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
   // Profile state
   const [fullName, setFullName] = useState(user?.full_name || '');

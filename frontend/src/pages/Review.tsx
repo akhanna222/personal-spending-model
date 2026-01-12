@@ -34,7 +34,7 @@ export default function Review() {
 
       // Filter low confidence transactions
       const lowConf = transactions.filter(
-        t => !t.primaryCategory || !t.categoryConfidence || t.categoryConfidence < 0.7
+        (t: Transaction) => !t.primaryCategory || !t.categoryConfidence || t.categoryConfidence < 0.7
       );
       setLowConfidenceTransactions(lowConf);
 

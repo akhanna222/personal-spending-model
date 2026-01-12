@@ -170,10 +170,22 @@ print_section "6. Setup Environment Variables"
 
 print_info "Setting up environment variables..."
 
-# Prompt for OpenAI API key
-read -p "Enter your OpenAI API Key: " OPENAI_API_KEY
+# Get OpenAI API key from environment or prompt
+if [ -z "$OPENAI_API_KEY" ]; then
+    print_info "OpenAI API key not set in environment"
+    if [ -t 0 ]; then
+        # Running interactively
+        read -p "Enter your OpenAI API Key: " OPENAI_API_KEY
+    else
+        # Running via pipe (curl | bash)
+        read -p "Enter your OpenAI API Key: " OPENAI_API_KEY < /dev/tty
+    fi
+fi
+
 if [ -z "$OPENAI_API_KEY" ]; then
     print_error "OpenAI API Key is required"
+    print_info "Set it as environment variable: export OPENAI_API_KEY=your-key"
+    print_info "Or run script directly: ./deploy-ec2.sh"
     exit 1
 fi
 
@@ -209,6 +221,21 @@ chmod 600 $INSTALL_DIR/backend/.env
 print_success "Environment variables configured"
 
 print_section "7. Setup PostgreSQL Database"
+
+# Check and kill process on port 5432 if exists
+print_info "Checking port 5432..."
+if lsof -ti:5432 > /dev/null 2>&1; then
+    print_info "Port 5432 is in use, stopping existing PostgreSQL..."
+    lsof -ti:5432 | xargs -r kill -9 2>/dev/null || true
+    sleep 2
+fi
+
+# Stop any existing containers
+if docker ps -a | grep -q spendlens_postgres; then
+    print_info "Removing existing PostgreSQL container..."
+    docker stop spendlens_postgres 2>/dev/null || true
+    docker rm spendlens_postgres 2>/dev/null || true
+fi
 
 print_info "Starting PostgreSQL container..."
 

@@ -225,7 +225,7 @@ export default function Dashboard() {
                     insights.categoryBreakdown.find(c => c.primaryCategory.replace(/_/g, ' ') === data.name)?.primaryCategory || null
                   )}
                 >
-                  {categoryPieData.map((entry, index) => (
+                  {categoryPieData.map((_entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>

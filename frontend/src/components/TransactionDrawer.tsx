@@ -8,7 +8,6 @@ interface TransactionDrawerProps {
   primaryCategories: string[];
   onClose: () => void;
   onUpdate: (id: string, updates: Partial<Transaction>) => void;
-  getCategoryColor: (category: string) => string;
 }
 
 export default function TransactionDrawer({
@@ -17,7 +16,6 @@ export default function TransactionDrawer({
   primaryCategories,
   onClose,
   onUpdate,
-  getCategoryColor,
 }: TransactionDrawerProps) {
   const [editedPrimary, setEditedPrimary] = useState(transaction.primaryCategory || '');
   const [editedDetailed, setEditedDetailed] = useState(transaction.detailedCategory || '');
