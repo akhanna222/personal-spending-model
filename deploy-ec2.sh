@@ -17,7 +17,7 @@ NC='\033[0m' # No Color
 DOMAIN="${DOMAIN:-}"  # Optional: your domain name (e.g., spendlens.example.com)
 SSL_EMAIL="${SSL_EMAIL:-}"  # Optional: email for Let's Encrypt
 REPOSITORY_URL="https://github.com/akhanna222/personal-spending-model.git"
-BRANCH="${BRANCH:-main}"
+BRANCH="${BRANCH:-claude/bank-statement-extraction-pEtji}"
 INSTALL_DIR="/opt/spendlens"
 APP_USER="spendlens"
 
