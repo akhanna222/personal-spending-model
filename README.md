@@ -686,6 +686,75 @@ Both frontend and backend use TypeScript. Shared types are in `backend/src/types
 - Create test user first or update tests with authentication
 - Check backend logs for errors
 
+## Production Deployment
+
+### 🚀 Deploy to AWS EC2 (One Command)
+
+Deploy the complete application to AWS EC2 with a single command:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/akhanna222/personal-spending-model/main/deploy-ec2.sh | sudo bash
+```
+
+This automated script will:
+- ✅ Install all dependencies (Node.js, Docker, Nginx)
+- ✅ Setup PostgreSQL database with Docker
+- ✅ Clone and configure the application
+- ✅ Build frontend for production
+- ✅ Setup PM2 for process management
+- ✅ Configure Nginx as reverse proxy
+- ✅ Optionally setup SSL with Let's Encrypt
+- ✅ Start all services
+
+**With custom domain and SSL:**
+```bash
+export DOMAIN="spendlens.yourdomain.com"
+export SSL_EMAIL="your-email@example.com"
+curl -fsSL https://raw.githubusercontent.com/akhanna222/personal-spending-model/main/deploy-ec2.sh | sudo -E bash
+```
+
+**Prerequisites:**
+- AWS EC2 instance (Ubuntu 22.04 LTS recommended)
+- Instance type: t3.medium or better (2 vCPU, 4GB RAM minimum)
+- Security group: Allow ports 22 (SSH), 80 (HTTP), 443 (HTTPS)
+- OpenAI API key
+
+**📖 Detailed Deployment Guide:**
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for comprehensive step-by-step instructions including:
+- EC2 instance setup and configuration
+- Security group configuration
+- Domain and SSL setup
+- Troubleshooting common issues
+- Performance optimization
+- Backup and monitoring strategies
+
+**⚡ Quick Reference:**
+
+See [QUICK-DEPLOY.md](QUICK-DEPLOY.md) for:
+- Essential management commands
+- Quick troubleshooting tips
+- Common operations
+
+### Other Deployment Options
+
+**Docker Compose (Any Server):**
+```bash
+# Clone repository
+git clone https://github.com/akhanna222/personal-spending-model.git
+cd personal-spending-model
+
+# Setup environment
+./setup-database.sh
+./start-dynamic.sh
+```
+
+**Heroku, DigitalOcean, or other platforms:**
+- Ensure PostgreSQL 14+ is available
+- Set environment variables (OpenAI key, JWT secret, DB credentials)
+- Build frontend: `cd frontend && npm run build`
+- Deploy backend with database connection
+
 ## Contributing
 
 This is a demo project built from a product specification. To extend:
