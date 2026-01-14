@@ -307,7 +307,6 @@ export default function Transactions() {
           primaryCategories={primaryCategories}
           onClose={() => setSelectedTransaction(null)}
           onUpdate={handleUpdateTransaction}
-          getCategoryColor={getCategoryColor}
         />
       )}
     </div>
