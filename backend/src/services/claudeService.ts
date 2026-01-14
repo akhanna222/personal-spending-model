@@ -68,8 +68,8 @@ Respond in JSON format:
     console.error('Error enhancing transaction:', error);
     // Return fallback enhancement
     return {
-      enhancedDescription: transaction.rawDescription,
-      merchant: null,
+      enhancedDescription: transaction.rawDescription || transaction.transaction_text,
+      merchant: undefined,
       channel: 'unknown',
       primaryCategory: transaction.isIncome ? 'INCOME' : 'UNCATEGORIZED',
       detailedCategory: transaction.isIncome ? 'INCOME_OTHER' : 'UNCATEGORIZED_UNKNOWN',

@@ -50,7 +50,6 @@ router.post('/upload', async (req, res) => {
         store.transactions.push(...parsed.transactions);
         store.statements.push({
           id: file.name,
-          fileName: file.name,
           uploadDate: new Date().toISOString(),
           transactionCount: parsed.transactions.length,
           processingTime: duration,
@@ -141,8 +140,8 @@ router.get('/transactions', (req, res) => {
     let filtered = [...store.transactions];
 
     // Filters
-    if (req.query.startDate) filtered = filtered.filter(t => t.date >= req.query.startDate);
-    if (req.query.endDate) filtered = filtered.filter(t => t.date <= req.query.endDate);
+    if (req.query.startDate) filtered = filtered.filter(t => t.date >= (req.query.startDate as string));
+    if (req.query.endDate) filtered = filtered.filter(t => t.date <= (req.query.endDate as string));
     if (req.query.primaryCategory) {
       filtered = filtered.filter(t => t.transaction_primary === req.query.primaryCategory);
     }

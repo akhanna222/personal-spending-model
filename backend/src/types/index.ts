@@ -8,6 +8,7 @@ export interface Transaction {
   transaction_description?: string; // AI-generated description
   transaction_primary?: string; // Plaid primary category
   transaction_detailed?: string; // Plaid detailed category
+  is_reviewed?: boolean; // Whether user has reviewed this transaction
 
   // Legacy fields for backward compatibility
   amount?: number;

@@ -142,7 +142,7 @@ async function parseCSVStructured(
           reject(error);
         }
       },
-      error: (error) => reject(error),
+      error: (error: any) => reject(error),
     });
   });
 }

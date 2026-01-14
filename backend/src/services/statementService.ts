@@ -88,7 +88,7 @@ export class StatementService {
       [statementId, userId]
     );
 
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 
   /**

@@ -1,6 +1,13 @@
 import { pool } from '../config/database';
-import { riskAnalyzer, RiskPattern, PatternFeedback } from './behaviorRiskAnalyzer';
+import { riskAnalyzer, RiskPattern } from './behaviorRiskAnalyzer';
 import { Transaction } from '../types';
+
+export interface PatternFeedback {
+  isAccurate: boolean;
+  isRelevant: boolean;
+  isActionable?: boolean;
+  notes?: string;
+}
 
 export class RiskService {
   /**
@@ -44,15 +51,15 @@ export class RiskService {
       [
         pattern.id,
         userId,
-        pattern.patternType,
-        pattern.patternName,
+        pattern.type,
+        pattern.title,
         pattern.description,
         pattern.severity,
         pattern.confidence,
-        JSON.stringify(pattern.affectedTransactions),
-        pattern.timeframe,
-        pattern.amountInvolved,
-        pattern.recommendation,
+        JSON.stringify(pattern.pattern.transactions),
+        pattern.pattern.timeframe,
+        0, // amount_involved - not in new interface
+        pattern.recommendations.join('; '),
       ]
     );
   }
@@ -72,19 +79,25 @@ export class RiskService {
 
     const result = await pool.query(query, [userId]);
 
-    return result.rows.map((row) => ({
+    return result.rows.map((row: any) => ({
       id: row.id,
-      patternType: row.pattern_type,
-      patternName: row.pattern_name,
-      description: row.description,
+      userId: row.user_id,
+      type: row.pattern_type,
       severity: row.severity,
+      title: row.pattern_name,
+      description: row.description,
       confidence: row.confidence,
       detectedAt: row.detected_at,
-      affectedTransactions: row.affected_transactions,
-      timeframe: row.timeframe,
-      amountInvolved: parseFloat(row.amount_involved),
-      recommendation: row.recommendation,
-      userFeedback: null, // Will be loaded separately if needed
+      pattern: {
+        timeframe: row.timeframe,
+        transactions: JSON.parse(row.affected_transactions || '[]'),
+        indicators: [],
+        context: row.description,
+      },
+      userFeedback: undefined,
+      version: 1,
+      learningScore: 0.5,
+      recommendations: row.recommendation ? row.recommendation.split('; ') : [],
     }));
   }
 
@@ -105,17 +118,23 @@ export class RiskService {
     const row = result.rows[0];
     return {
       id: row.id,
-      patternType: row.pattern_type,
-      patternName: row.pattern_name,
-      description: row.description,
+      userId: row.user_id,
+      type: row.pattern_type,
       severity: row.severity,
+      title: row.pattern_name,
+      description: row.description,
       confidence: row.confidence,
       detectedAt: row.detected_at,
-      affectedTransactions: row.affected_transactions,
-      timeframe: row.timeframe,
-      amountInvolved: parseFloat(row.amount_involved),
-      recommendation: row.recommendation,
-      userFeedback: null,
+      pattern: {
+        timeframe: row.timeframe,
+        transactions: JSON.parse(row.affected_transactions || '[]'),
+        indicators: [],
+        context: row.description,
+      },
+      userFeedback: undefined,
+      version: 1,
+      learningScore: 0.5,
+      recommendations: row.recommendation ? row.recommendation.split('; ') : [],
     };
   }
 
@@ -137,7 +156,7 @@ export class RiskService {
     // Get template ID if exists
     const templateResult = await pool.query(
       'SELECT id FROM risk_pattern_templates WHERE pattern_type = $1',
-      [pattern.patternType]
+      [pattern.type]
     );
 
     const templateId = templateResult.rows[0]?.id || null;
@@ -165,7 +184,7 @@ export class RiskService {
       // Update database template
       const template = riskAnalyzer
         .getPatternTemplates()
-        .find((t) => t.patternType === pattern.patternType);
+        .find((t) => t.type === pattern.type);
 
       if (template) {
         await pool.query(
@@ -181,7 +200,7 @@ export class RiskService {
             template.totalDetections,
             template.accurateFeedbacks,
             template.successRate,
-            template.patternType,
+            template.type,
           ]
         );
       }
@@ -198,7 +217,7 @@ export class RiskService {
        ORDER BY success_rate DESC, learning_score DESC`
     );
 
-    return result.rows.map((row) => ({
+    return result.rows.map((row: any) => ({
       patternType: row.pattern_type,
       displayName: row.display_name,
       description: row.description,
@@ -265,7 +284,7 @@ export class RiskService {
       [patternId, userId]
     );
 
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 
   /**
@@ -320,17 +339,23 @@ export class RiskService {
     const row = result.rows[0];
     return {
       id: row.id,
-      patternType: row.pattern_type,
-      patternName: row.pattern_name,
-      description: row.description,
+      userId: row.user_id,
+      type: row.pattern_type,
       severity: row.severity,
+      title: row.pattern_name,
+      description: row.description,
       confidence: row.confidence,
       detectedAt: row.detected_at,
-      affectedTransactions: row.affected_transactions,
-      timeframe: row.timeframe,
-      amountInvolved: parseFloat(row.amount_involved),
-      recommendation: row.recommendation,
-      userFeedback: null,
+      pattern: {
+        timeframe: row.timeframe,
+        transactions: JSON.parse(row.affected_transactions || '[]'),
+        indicators: [],
+        context: row.description,
+      },
+      userFeedback: undefined,
+      version: 1,
+      learningScore: 0.5,
+      recommendations: row.recommendation ? row.recommendation.split('; ') : [],
     };
   }
 }

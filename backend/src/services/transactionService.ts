@@ -184,7 +184,7 @@ export class TransactionService {
       [userId]
     );
 
-    return result.rowCount;
+    return result.rowCount || 0;
   }
 
   /**
