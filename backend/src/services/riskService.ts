@@ -1,6 +1,13 @@
 import { pool } from '../config/database';
 import { riskAnalyzer, RiskPattern } from './behaviorRiskAnalyzer';
 import { Transaction } from '../types';
+import {
+  mapRowToRiskPattern,
+  mapRowToPatternTemplate,
+  buildUpdateQuery,
+  RiskPatternRow,
+  PatternTemplateRow,
+} from '../utils/dbMappers';
 
 export interface PatternFeedback {
   isAccurate: boolean;
@@ -77,28 +84,8 @@ export class RiskService {
       ORDER BY detected_at DESC
     `;
 
-    const result = await pool.query(query, [userId]);
-
-    return result.rows.map((row: any) => ({
-      id: row.id,
-      userId: row.user_id,
-      type: row.pattern_type,
-      severity: row.severity,
-      title: row.pattern_name,
-      description: row.description,
-      confidence: row.confidence,
-      detectedAt: row.detected_at,
-      pattern: {
-        timeframe: row.timeframe,
-        transactions: JSON.parse(row.affected_transactions || '[]'),
-        indicators: [],
-        context: row.description,
-      },
-      userFeedback: undefined,
-      version: 1,
-      learningScore: 0.5,
-      recommendations: row.recommendation ? row.recommendation.split('; ') : [],
-    }));
+    const result = await pool.query<RiskPatternRow>(query, [userId]);
+    return result.rows.map(mapRowToRiskPattern);
   }
 
   /**
@@ -108,34 +95,13 @@ export class RiskService {
     patternId: string,
     userId: string
   ): Promise<RiskPattern | null> {
-    const result = await pool.query(
+    const result = await pool.query<RiskPatternRow>(
       'SELECT * FROM user_risk_patterns WHERE id = $1 AND user_id = $2',
       [patternId, userId]
     );
 
     if (result.rows.length === 0) return null;
-
-    const row = result.rows[0];
-    return {
-      id: row.id,
-      userId: row.user_id,
-      type: row.pattern_type,
-      severity: row.severity,
-      title: row.pattern_name,
-      description: row.description,
-      confidence: row.confidence,
-      detectedAt: row.detected_at,
-      pattern: {
-        timeframe: row.timeframe,
-        transactions: JSON.parse(row.affected_transactions || '[]'),
-        indicators: [],
-        context: row.description,
-      },
-      userFeedback: undefined,
-      version: 1,
-      learningScore: 0.5,
-      recommendations: row.recommendation ? row.recommendation.split('; ') : [],
-    };
+    return mapRowToRiskPattern(result.rows[0]);
   }
 
   /**
@@ -210,23 +176,14 @@ export class RiskService {
   /**
    * Get pattern templates
    */
-  async getPatternTemplates(): Promise<any[]> {
-    const result = await pool.query(
+  async getPatternTemplates() {
+    const result = await pool.query<PatternTemplateRow>(
       `SELECT * FROM risk_pattern_templates
        WHERE is_active = true
        ORDER BY success_rate DESC, learning_score DESC`
     );
 
-    return result.rows.map((row: any) => ({
-      patternType: row.pattern_type,
-      displayName: row.display_name,
-      description: row.description,
-      severity: row.severity,
-      learningScore: parseFloat(row.learning_score),
-      totalDetections: row.total_detections,
-      accurateFeedbacks: row.accurate_feedbacks,
-      successRate: parseFloat(row.success_rate),
-    }));
+    return result.rows.map(mapRowToPatternTemplate);
   }
 
   /**
@@ -299,64 +256,18 @@ export class RiskService {
       severity?: string;
     }
   ): Promise<RiskPattern | null> {
-    const fields: string[] = [];
-    const values: any[] = [];
-    let paramCount = 1;
+    const { query, values, hasUpdates } = buildUpdateQuery(
+      'user_risk_patterns',
+      updates,
+      [patternId, userId]
+    );
 
-    if (updates.description !== undefined) {
-      fields.push(`description = $${paramCount}`);
-      values.push(updates.description);
-      paramCount++;
-    }
+    if (!hasUpdates) return null;
 
-    if (updates.recommendation !== undefined) {
-      fields.push(`recommendation = $${paramCount}`);
-      values.push(updates.recommendation);
-      paramCount++;
-    }
-
-    if (updates.severity !== undefined) {
-      fields.push(`severity = $${paramCount}`);
-      values.push(updates.severity);
-      paramCount++;
-    }
-
-    if (fields.length === 0) return null;
-
-    values.push(patternId, userId);
-
-    const query = `
-      UPDATE user_risk_patterns
-      SET ${fields.join(', ')}
-      WHERE id = $${paramCount} AND user_id = $${paramCount + 1}
-      RETURNING *
-    `;
-
-    const result = await pool.query(query, values);
-
+    const result = await pool.query<RiskPatternRow>(query, values);
     if (result.rows.length === 0) return null;
 
-    const row = result.rows[0];
-    return {
-      id: row.id,
-      userId: row.user_id,
-      type: row.pattern_type,
-      severity: row.severity,
-      title: row.pattern_name,
-      description: row.description,
-      confidence: row.confidence,
-      detectedAt: row.detected_at,
-      pattern: {
-        timeframe: row.timeframe,
-        transactions: JSON.parse(row.affected_transactions || '[]'),
-        indicators: [],
-        context: row.description,
-      },
-      userFeedback: undefined,
-      version: 1,
-      learningScore: 0.5,
-      recommendations: row.recommendation ? row.recommendation.split('; ') : [],
-    };
+    return mapRowToRiskPattern(result.rows[0]);
   }
 }
 
