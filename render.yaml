@@ -1,0 +1,70 @@
+services:
+  # PostgreSQL Database
+  - type: pserv
+    name: spendlens-postgres
+    env: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile.postgres
+    envVars:
+      - key: POSTGRES_DB
+        value: spendlens
+      - key: POSTGRES_USER
+        value: spendlens_user
+      - key: POSTGRES_PASSWORD
+        generateValue: true
+    disk:
+      name: postgres-data
+      mountPath: /var/lib/postgresql/data
+      sizeGB: 10
+
+  # Backend API
+  - type: web
+    name: spendlens-backend
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: DB_HOST
+        fromService:
+          type: pserv
+          name: spendlens-postgres
+          property: host
+      - key: DB_PORT
+        value: 5432
+      - key: DB_NAME
+        value: spendlens
+      - key: DB_USER
+        value: spendlens_user
+      - key: DB_PASSWORD
+        fromService:
+          type: pserv
+          name: spendlens-postgres
+          envVarKey: POSTGRES_PASSWORD
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+
+  # Frontend Static Site
+  - type: web
+    name: spendlens-frontend
+    env: static
+    region: oregon
+    plan: free
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: ./frontend/dist
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://spendlens-backend.onrender.com/api/*
+      - type: rewrite
+        source: /*
+        destination: /index.html

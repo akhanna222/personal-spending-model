@@ -111,10 +111,10 @@ router.get('/transactions', (req, res) => {
 
     // Filter by date range
     if (req.query.startDate) {
-      filtered = filtered.filter(t => t.date >= req.query.startDate);
+      filtered = filtered.filter(t => t.date >= (req.query.startDate as string));
     }
     if (req.query.endDate) {
-      filtered = filtered.filter(t => t.date <= req.query.endDate);
+      filtered = filtered.filter(t => t.date <= (req.query.endDate as string));
     }
 
     // Filter by category
@@ -133,7 +133,7 @@ router.get('/transactions', (req, res) => {
       const search = (req.query.search as string).toLowerCase();
       filtered = filtered.filter(
         t =>
-          t.rawDescription.toLowerCase().includes(search) ||
+          (t.rawDescription?.toLowerCase() || '').includes(search) ||
           (t.enhancedDescription?.toLowerCase() || '').includes(search) ||
           (t.merchant?.toLowerCase() || '').includes(search)
       );

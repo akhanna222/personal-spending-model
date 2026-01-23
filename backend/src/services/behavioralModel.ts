@@ -1,4 +1,13 @@
 import { Transaction, BehavioralInsights } from '../types';
+import {
+  calculateTotalAmount,
+  getTransactionAmount,
+  getTransactionDescription,
+  groupByMerchant,
+  getMonthKey,
+  calculateVariance,
+  daysBetween,
+} from '../utils/transactionHelpers';
 
 /**
  * Generate behavioral spending insights from transactions
@@ -20,8 +29,8 @@ export function generateInsights(transactions: Transaction[]): BehavioralInsight
   const incomeTransactions = categorizedTransactions.filter(t => t.isIncome);
   const expenseTransactions = categorizedTransactions.filter(t => !t.isIncome);
 
-  const totalIncome = incomeTransactions.reduce((sum, t) => sum + Math.abs(t.amount), 0);
-  const totalSpend = expenseTransactions.reduce((sum, t) => sum + Math.abs(t.amount), 0);
+  const totalIncome = calculateTotalAmount(incomeTransactions);
+  const totalSpend = calculateTotalAmount(expenseTransactions);
   const savingsRate = totalIncome > 0 ? ((totalIncome - totalSpend) / totalIncome) * 100 : 0;
 
   // Calculate monthly averages
@@ -93,14 +102,14 @@ function generateCategoryBreakdown(transactions: Transaction[], totalSpend: numb
     }
 
     const category = categoryMap.get(t.primaryCategory)!;
-    category.total += Math.abs(t.amount);
+    category.total += getTransactionAmount(t);
 
     if (!category.detailed.has(t.detailedCategory)) {
       category.detailed.set(t.detailedCategory, { amount: 0, count: 0 });
     }
 
     const detailed = category.detailed.get(t.detailedCategory)!;
-    detailed.amount += Math.abs(t.amount);
+    detailed.amount += getTransactionAmount(t);
     detailed.count += 1;
   });
 
@@ -134,10 +143,11 @@ function generateMonthlyTrends(transactions: Transaction[]) {
     }
 
     const data = monthlyMap.get(month)!;
+    const amount = getTransactionAmount(t);
     if (t.isIncome) {
-      data.income += Math.abs(t.amount);
+      data.income += amount;
     } else {
-      data.spend += Math.abs(t.amount);
+      data.spend += amount;
     }
   });
 
@@ -155,16 +165,7 @@ function generateMonthlyTrends(transactions: Transaction[]) {
  * Detect recurring payments
  */
 function detectRecurringPayments(transactions: Transaction[]) {
-  const merchantMap = new Map<string, Transaction[]>();
-
-  // Group by merchant
-  transactions.forEach(t => {
-    const merchant = t.merchant || t.rawDescription.substring(0, 30);
-    if (!merchantMap.has(merchant)) {
-      merchantMap.set(merchant, []);
-    }
-    merchantMap.get(merchant)!.push(t);
-  });
+  const merchantMap = groupByMerchant(transactions);
 
   const recurring: Array<{
     merchant: string;
@@ -178,9 +179,9 @@ function detectRecurringPayments(transactions: Transaction[]) {
     if (txns.length < 3) return; // Need at least 3 occurrences
 
     // Check if amounts are similar (within 10%)
-    const amounts = txns.map(t => Math.abs(t.amount));
+    const amounts = txns.map(getTransactionAmount);
     const avgAmount = amounts.reduce((a, b) => a + b, 0) / amounts.length;
-    const variance = amounts.every(amt => Math.abs(amt - avgAmount) / avgAmount < 0.1);
+    const variance = calculateVariance(amounts);
 
     if (variance) {
       // Check if dates are roughly periodic
@@ -223,7 +224,7 @@ function analyzeSpendingPatterns(transactions: Transaction[]) {
   let variable = 0;
 
   transactions.forEach(t => {
-    const amount = Math.abs(t.amount);
+    const amount = getTransactionAmount(t);
     if (fixedCategories.includes(t.primaryCategory || '')) {
       fixed += amount;
     } else if (discretionaryCategories.includes(t.primaryCategory || '')) {

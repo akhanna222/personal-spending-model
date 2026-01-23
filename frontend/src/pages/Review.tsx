@@ -34,7 +34,7 @@ export default function Review() {
 
       // Filter low confidence transactions
       const lowConf = transactions.filter(
-        t => !t.primaryCategory || !t.categoryConfidence || t.categoryConfidence < 0.7
+        (t: Transaction) => !t.primaryCategory || !t.categoryConfidence || t.categoryConfidence < 0.7
       );
       setLowConfidenceTransactions(lowConf);
 
@@ -85,9 +85,7 @@ export default function Review() {
 
   const displayedTransactions = activeTab === 'all'
     ? allTransactions
-    : activeTab === 'low-confidence'
-    ? lowConfidenceTransactions
-    : []; // TODO: Add edited transactions tracking
+    : lowConfidenceTransactions;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -287,7 +285,6 @@ export default function Review() {
           primaryCategories={primaryCategories}
           onClose={() => setSelectedTransaction(null)}
           onUpdate={handleUpdateTransaction}
-          getCategoryColor={getCategoryColor}
         />
       )}
     </div>
