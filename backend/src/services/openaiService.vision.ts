@@ -3,9 +3,20 @@ import { Transaction } from '../types';
 import plaidCategories from '../../../shared/plaid-categories.json';
 import { v4 as uuidv4 } from 'uuid';
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization - only create client when API key is available
+let client: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI {
+  if (!client) {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OpenAI API key is not configured. Please set OPENAI_API_KEY environment variable.');
+    }
+    client = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return client;
+}
 
 interface PlaidCategory {
   PRIMARY: string;
@@ -81,7 +92,7 @@ CRITICAL RULES:
     }
 
     // Use function calling for guaranteed JSON structure
-    const response = await client.chat.completions.create({
+    const response = await getOpenAIClient().chat.completions.create({
       model: contentType === 'image' ? 'gpt-4o' : 'gpt-4o-mini',
       messages,
       functions: [
@@ -214,7 +225,7 @@ export async function enhanceTransactionsBatchVision(
     const batch = transactions.slice(i, i + batchSize);
 
     try {
-      const response = await client.chat.completions.create({
+      const response = await getOpenAIClient().chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
           {

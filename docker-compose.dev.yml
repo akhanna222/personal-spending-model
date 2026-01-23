@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:14-alpine
+    container_name: spendlens-db
+    environment:
+      POSTGRES_DB: spendlens
+      POSTGRES_USER: spendlens_user
+      POSTGRES_PASSWORD: spendlens_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U spendlens_user -d spendlens"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend.dev
+    container_name: spendlens-backend
+    environment:
+      # Database connection
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: spendlens
+      DB_USER: spendlens_user
+      DB_PASSWORD: spendlens_password
+
+      # Server config
+      PORT: 3001
+      NODE_ENV: development
+      JWT_SECRET: dev-secret-change-in-production
+
+      # OpenAI (optional - app will start without it)
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./backend:/app/backend
+      - /app/backend/node_modules
+      - /app/backend/dist
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: npm run dev
+    stdin_open: true
+    tty: true
+
+  # Frontend
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend.dev
+    container_name: spendlens-frontend
+    environment:
+      - VITE_API_URL=http://localhost:3001/api
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app/frontend
+      - /app/frontend/node_modules
+    depends_on:
+      - backend
+    command: npm run dev
+    stdin_open: true
+    tty: true
+
+volumes:
+  postgres_data:
+    driver: local

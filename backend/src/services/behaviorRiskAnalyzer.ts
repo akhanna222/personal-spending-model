@@ -1,9 +1,20 @@
 import OpenAI from 'openai';
 import { Transaction } from '../types';
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || 'missing-api-key',
-});
+// Lazy initialization - only create client when API key is available
+let client: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI {
+  if (!client) {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OpenAI API key is not configured. Please set OPENAI_API_KEY environment variable.');
+    }
+    client = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return client;
+}
 
 /**
  * Risk Pattern Structure
@@ -176,7 +187,7 @@ export class BehaviorRiskAnalyzer {
     const prompt = this.buildDetectionPrompt(summary, feedbackContext);
 
     try {
-      const response = await client.chat.completions.create({
+      const response = await getOpenAIClient().chat.completions.create({
         model: 'gpt-4o',
         messages: [
           {
@@ -367,7 +378,7 @@ Suggest:
 3. Better thresholds or indicators`;
 
     try {
-      const response = await client.chat.completions.create({
+      const response = await getOpenAIClient().chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
           {

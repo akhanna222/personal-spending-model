@@ -1,15 +1,34 @@
 import { Pool, PoolConfig } from 'pg';
 
-const config: PoolConfig = {
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '5432'),
-  database: process.env.DB_NAME || 'spendlens',
-  user: process.env.DB_USER || 'spendlens_user',
-  password: process.env.DB_PASSWORD || 'spendlens_password',
-  max: 20, // Maximum number of clients in the pool
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+// Railway, Render, and other platforms provide DATABASE_URL
+// For backward compatibility, also support individual env vars (EC2, Docker)
+const getDatabaseConfig = (): PoolConfig => {
+  if (process.env.DATABASE_URL) {
+    console.log('📊 Using DATABASE_URL for database connection');
+    return {
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 2000,
+    };
+  }
+
+  // Fall back to individual environment variables
+  console.log('📊 Using individual DB_* environment variables');
+  return {
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || '5432'),
+    database: process.env.DB_NAME || 'spendlens',
+    user: process.env.DB_USER || 'spendlens_user',
+    password: process.env.DB_PASSWORD || 'spendlens_password',
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
+  };
 };
+
+const config = getDatabaseConfig();
 
 // Create a connection pool
 export const pool = new Pool(config);
@@ -34,6 +53,25 @@ export async function testConnection(): Promise<boolean> {
     return true;
   } catch (error) {
     console.error('❌ Database connection test failed:', error);
+
+    // Provide helpful error messages based on the error
+    if (!process.env.DATABASE_URL && !process.env.DB_HOST) {
+      console.error('');
+      console.error('💡 SOLUTION FOR RAILWAY/RENDER:');
+      console.error('   1. Add PostgreSQL plugin/service to your project');
+      console.error('   2. The DATABASE_URL will be automatically set');
+      console.error('   3. Redeploy your application');
+      console.error('');
+      console.error('💡 SOLUTION FOR DOCKER/EC2:');
+      console.error('   Set these environment variables:');
+      console.error('   - DB_HOST (e.g., localhost or postgres container name)');
+      console.error('   - DB_PORT (default: 5432)');
+      console.error('   - DB_NAME (default: spendlens)');
+      console.error('   - DB_USER (default: spendlens_user)');
+      console.error('   - DB_PASSWORD (required)');
+      console.error('');
+    }
+
     return false;
   }
 }

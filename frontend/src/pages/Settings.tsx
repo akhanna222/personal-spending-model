@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/Header';
+import API_BASE_URL from '../config/api';
 
 interface UserSettings {
   theme: string;
@@ -39,7 +40,7 @@ export default function Settings() {
 
   const loadSettings = async () => {
     try {
-      const response = await axios.get('http://localhost:3001/api/auth/settings');
+      const response = await axios.get(`${API_BASE_URL}/auth/settings`);
       if (response.data.settings) {
         setSettings({
           theme: response.data.settings.theme,
@@ -56,7 +57,7 @@ export default function Settings() {
   const saveProfile = async () => {
     try {
       setSavingProfile(true);
-      await axios.put('http://localhost:3001/api/auth/profile', {
+      await axios.put(`${API_BASE_URL}/auth/profile`, {
         fullName,
       });
       alert('Profile updated successfully!');
@@ -84,7 +85,7 @@ export default function Settings() {
 
     try {
       setChangingPassword(true);
-      await axios.post('http://localhost:3001/api/auth/change-password', {
+      await axios.post(`${API_BASE_URL}/auth/change-password`, {
         currentPassword,
         newPassword,
       });
@@ -104,7 +105,7 @@ export default function Settings() {
   const saveSettings = async () => {
     try {
       setSavingSettings(true);
-      await axios.put('http://localhost:3001/api/auth/settings', {
+      await axios.put(`${API_BASE_URL}/auth/settings`, {
         theme: settings.theme,
         currency: settings.currency,
         dateFormat: settings.dateFormat,

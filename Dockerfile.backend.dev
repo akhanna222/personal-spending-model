@@ -1,0 +1,21 @@
+FROM node:18-alpine
+
+# Install development dependencies
+RUN apk add --no-cache git
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY backend/package*.json ./backend/
+COPY shared ./shared
+
+# Install dependencies
+WORKDIR /app/backend
+RUN npm install
+
+# Expose port
+EXPOSE 3001
+
+# Development mode with hot reload
+CMD ["npm", "run", "dev"]

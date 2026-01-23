@@ -3,9 +3,20 @@ import { Transaction } from '../types';
 import plaidCategories from '../../../shared/plaid-categories.json';
 import { v4 as uuidv4 } from 'uuid';
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization - only create client when API key is available
+let client: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI {
+  if (!client) {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OpenAI API key is not configured. Please set OPENAI_API_KEY environment variable.');
+    }
+    client = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return client;
+}
 
 interface PlaidCategory {
   PRIMARY: string;
@@ -48,7 +59,7 @@ export async function extractTransactionsWithAI(
         ];
 
     // Use function calling for structured extraction
-    const response = await client.chat.completions.create({
+    const response = await getOpenAIClient().chat.completions.create({
       model: isImage ? 'gpt-4o' : 'gpt-4o-mini',
       messages: [
         {
@@ -152,7 +163,7 @@ export async function enhanceTransactionsBatchOptimized(
 
     try {
       // Single AI call for entire batch
-      const response = await client.chat.completions.create({
+      const response = await getOpenAIClient().chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
           {

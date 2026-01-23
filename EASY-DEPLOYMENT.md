@@ -35,24 +35,21 @@ git push origin claude/bank-statement-extraction-pEtji
 3. **Deploy from GitHub**:
    - Select your repository: `akhanna222/personal-spending-model`
    - Select branch: `claude/bank-statement-extraction-pEtji`
-4. **Add PostgreSQL**:
+4. **Add PostgreSQL** (REQUIRED):
    - Click "+ New"
    - Select "Database" → "PostgreSQL"
+   - Railway automatically sets DATABASE_URL for you!
 5. **Configure Backend**:
    - Click on your service
    - Go to "Variables"
    - Add these environment variables:
      ```
      OPENAI_API_KEY=sk-proj-your-key-here
-     DB_HOST=${{Postgres.PGHOST}}
-     DB_PORT=${{Postgres.PGPORT}}
-     DB_NAME=${{Postgres.PGDATABASE}}
-     DB_USER=${{Postgres.PGUSER}}
-     DB_PASSWORD=${{Postgres.PGPASSWORD}}
      JWT_SECRET=your-random-secret-here
      NODE_ENV=production
      PORT=3001
      ```
+   - **Note**: DATABASE_URL is automatically set by the PostgreSQL plugin
 6. **Deploy**: Railway will automatically build and deploy!
 
 ### Step 3: Setup Database Schema
