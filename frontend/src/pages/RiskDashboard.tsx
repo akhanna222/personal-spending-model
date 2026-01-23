@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Header from '../components/Header';
+import API_BASE_URL from '../config/api';
 
 interface RiskPattern {
   id: string;
@@ -57,8 +58,8 @@ export default function RiskDashboard() {
     try {
       setLoading(true);
       const [patternsRes, statsRes] = await Promise.all([
-        axios.get('http://localhost:3001/api/risks/patterns'),
-        axios.get('http://localhost:3001/api/risks/stats'),
+        axios.get(`${API_BASE_URL}/risks/patterns`),
+        axios.get(`${API_BASE_URL}/risks/stats`),
       ]);
 
       setPatterns(patternsRes.data.patterns || []);
@@ -76,7 +77,7 @@ export default function RiskDashboard() {
   const analyzeRisks = async () => {
     try {
       setAnalyzing(true);
-      await axios.post('http://localhost:3001/api/risks/analyze', {});
+      await axios.post(`${API_BASE_URL}/risks/analyze`, {});
       await loadData();
       alert('Risk analysis complete!');
     } catch (error: any) {
@@ -101,7 +102,7 @@ export default function RiskDashboard() {
 
     try {
       await axios.patch(
-        `http://localhost:3001/api/risks/patterns/${selectedPattern.id}`,
+        `${API_BASE_URL}/risks/patterns/${selectedPattern.id}`,
         {
           description: editedDescription,
           recommendation: editedRecommendation,
@@ -122,7 +123,7 @@ export default function RiskDashboard() {
     if (!selectedPattern) return;
 
     try {
-      await axios.post('http://localhost:3001/api/risks/feedback', {
+      await axios.post(`${API_BASE_URL}/risks/feedback`, {
         patternId: selectedPattern.id,
         isAccurate,
         isRelevant,
@@ -145,7 +146,7 @@ export default function RiskDashboard() {
     if (!confirm('Dismiss this pattern? You can view dismissed patterns later.')) return;
 
     try {
-      await axios.delete(`http://localhost:3001/api/risks/patterns/${patternId}`);
+      await axios.delete(`${API_BASE_URL}/risks/patterns/${patternId}`);
       await loadData();
     } catch (error: any) {
       console.error('Dismiss error:', error);

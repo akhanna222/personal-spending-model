@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Header from '../components/Header';
+import API_BASE_URL from '../config/api';
 
 interface BankStatement {
   id: string;
@@ -37,8 +38,8 @@ export default function Statements() {
     try {
       setLoading(true);
       const [statementsRes, statsRes] = await Promise.all([
-        axios.get(`http://localhost:3001/api/statements?page=${page}&limit=20`),
-        axios.get('http://localhost:3001/api/statements/stats'),
+        axios.get(`${API_BASE_URL}/statements?page=${page}&limit=20`),
+        axios.get(`${API_BASE_URL}/statements/stats`),
       ]);
 
       setStatements(statementsRes.data.statements || []);
@@ -60,7 +61,7 @@ export default function Statements() {
     }
 
     try {
-      await axios.delete(`http://localhost:3001/api/statements/${id}`);
+      await axios.delete(`${API_BASE_URL}/statements/${id}`);
       await loadData();
       alert('Statement deleted successfully');
     } catch (error: any) {
