@@ -2,16 +2,20 @@ import OpenAI from 'openai';
 import { Transaction } from '../types';
 import plaidCategories from '../../../shared/plaid-categories.json';
 
-// Validate OpenAI API key
-if (!process.env.OPENAI_API_KEY) {
-  console.error('❌ CRITICAL: OPENAI_API_KEY is not set!');
-  console.error('   AI-powered features (transaction extraction, categorization, risk analysis) will fail.');
-  console.error('   Set OPENAI_API_KEY in your .env file to enable these features.');
-}
+// Lazy initialization - only create client when API key is available
+let client: OpenAI | null = null;
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || 'missing-api-key',
-});
+function getOpenAIClient(): OpenAI {
+  if (!client) {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OpenAI API key is not configured. Please set OPENAI_API_KEY environment variable.');
+    }
+    client = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return client;
+}
 
 interface PlaidCategory {
   PRIMARY: string;
@@ -42,7 +46,7 @@ Transaction text: "${transactionText}"
 
 Provide only the description, nothing else. Be concise and clear. Focus on what was purchased or the service received.`;
 
-    const completion = await client.chat.completions.create({
+    const completion = await getOpenAIClient().chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         {
@@ -114,7 +118,7 @@ IMPORTANT RULES:
 
 If you cannot find a good match, leave both fields empty strings.`;
 
-    const completion = await client.chat.completions.create({
+    const completion = await getOpenAIClient().chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         {
