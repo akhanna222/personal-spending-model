@@ -25,14 +25,14 @@ Before deploying to Railway, verify:
 4. Choose: `akhanna222/personal-spending-model`
 5. Select branch: `claude/bank-statement-extraction-pEtji`
 
-### Step 2: Add PostgreSQL Database
+### Step 2: Add PostgreSQL Database (REQUIRED)
 
 1. In your Railway project, click **"+ New"**
 2. Select **"Database"** → **"PostgreSQL"**
 3. Railway will automatically:
    - Create database
    - Generate credentials
-   - Make them available as environment variables
+   - Set **DATABASE_URL** environment variable (backend will use this automatically)
 
 ### Step 3: Configure Backend Service
 
@@ -50,22 +50,25 @@ Click on your **backend service** → **"Variables"** tab:
 **Required Variables:**
 ```bash
 OPENAI_API_KEY=sk-proj-your-actual-key-here
-```
-
-**Auto-configured by Railway (from PostgreSQL):**
-```bash
-DB_HOST=${{Postgres.PGHOST}}
-DB_PORT=${{Postgres.PGPORT}}
-DB_NAME=${{Postgres.PGDATABASE}}
-DB_USER=${{Postgres.PGUSER}}
-DB_PASSWORD=${{Postgres.PGPASSWORD}}
-```
-
-**Additional Variables:**
-```bash
 NODE_ENV=production
 PORT=3001
-JWT_SECRET=${{Postgres.PGPASSWORD}}  # Or generate your own
+JWT_SECRET=your-random-secret-here  # Generate a random string
+```
+
+**✅ Database Connection (Automatic):**
+
+When you add the PostgreSQL plugin, Railway automatically sets `DATABASE_URL`.
+The backend will use this automatically - no manual DB configuration needed!
+
+**⚙️ Optional Database Override:**
+
+Only set these if you want to use a different database:
+```bash
+DB_HOST=your-custom-host
+DB_PORT=5432
+DB_NAME=your-db-name
+DB_USER=your-db-user
+DB_PASSWORD=your-db-password
 ```
 
 ### Step 5: Setup Database Schema
