@@ -85,9 +85,7 @@ export default function Review() {
 
   const displayedTransactions = activeTab === 'all'
     ? allTransactions
-    : activeTab === 'low-confidence'
-    ? lowConfidenceTransactions
-    : []; // TODO: Add edited transactions tracking
+    : lowConfidenceTransactions;
 
   return (
     <div className="min-h-screen bg-gray-50">

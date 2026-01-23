@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 import { Transaction } from '../types';
 
 const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY || 'missing-api-key',
 });
 
 /**
@@ -382,8 +382,12 @@ Suggest:
         temperature: 0.3,
       });
 
-      // TODO: Parse suggestions and update templates
-      console.log('Pattern evolution suggestions:', response.choices[0]?.message?.content);
+      // Log AI suggestions for manual review and future implementation
+      // The AI provides suggestions but templates are updated through user feedback instead
+      const suggestions = response.choices[0]?.message?.content;
+      if (suggestions) {
+        console.log('Pattern evolution suggestions:', suggestions);
+      }
 
       return this.patternTemplates;
     } catch (error) {

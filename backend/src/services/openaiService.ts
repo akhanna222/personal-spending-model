@@ -2,8 +2,15 @@ import OpenAI from 'openai';
 import { Transaction } from '../types';
 import plaidCategories from '../../../shared/plaid-categories.json';
 
+// Validate OpenAI API key
+if (!process.env.OPENAI_API_KEY) {
+  console.error('❌ CRITICAL: OPENAI_API_KEY is not set!');
+  console.error('   AI-powered features (transaction extraction, categorization, risk analysis) will fail.');
+  console.error('   Set OPENAI_API_KEY in your .env file to enable these features.');
+}
+
 const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY || 'missing-api-key',
 });
 
 interface PlaidCategory {
